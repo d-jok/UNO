@@ -702,8 +702,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Canvas: {fileID: 306483207}
   MenuElements: {fileID: 4217653}
-  mAI_Material: {fileID: 2100000, guid: 79d927052fb50b1459bcdbaec752555d, type: 2}
-  mLocalNet_Material: {fileID: 2100000, guid: 1f7adab7aaefbf6418829e0f83452fd2, type: 2}
 --- !u!4 &669449909
 Transform:
   m_ObjectHideFlags: 0
@@ -961,8 +959,7 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 31098d4e9b022e94db77c3eb0bd3bec1, type: 2}
-    m_RemovedComponents:
-    - {fileID: 4835744709580466631, guid: 111a0e11b5aeb074a89c892b3868cd3e, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 111a0e11b5aeb074a89c892b3868cd3e, type: 3}
 --- !u!1 &922984395
 GameObject:
