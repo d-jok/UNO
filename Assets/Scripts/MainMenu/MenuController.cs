@@ -75,7 +75,6 @@ namespace MainMenu
 									if (child.name != Constants.NEW_GAME && child.name != "Background")  //EDIT CHANGE!!!!
 									{
 										Destroy(child);
-										//child.SetActive(false);
 									}
 								}
 								//Start();
@@ -121,11 +120,7 @@ namespace MainMenu
 
 		IEnumerator StartIntro(int seconds)
 		{
-			//Image newImage = mImage.GetComponent<Image>();
-			//Sprite sprite = Resources.Load<Sprite>("Menu background");
-
 			yield return new WaitForSecondsRealtime(seconds);
-			//newImage.sprite = sprite;
 			mImage.SetActive(false);
 			mLogo.SetActive(true);
 			mPageTitle.SetActive(true);
@@ -142,33 +137,30 @@ namespace MainMenu
 			if (isDone == true)
 			{
 				isDone = false;
-				//newGame = MenuElements.transform.Find(NEW_GAME).gameObject;
+				Material matAI = Resources.Load<Material>("Materials/Menu Materials/SinglePlayerIcon");
+				Material matLocalNet = Resources.Load<Material>("Materials/Menu Materials/MultiplayerIcon");
+
 				StartCoroutine(Move(newGame, new Vector3(0f, 1f, 0f)));
 				StartCoroutine(Rotation(newGame, new Vector3(0f, 0f, 180f)));
 
 				yield return new WaitWhile(() => mIsRotateDone == false);
 				mIsRotateDone = false;
 
-
 				// Creates elements of new game.
 				// AI
-				GameObject AI = newGame;  //Edit!!!
+				GameObject AI = newGame;
 				AI.name = Constants.AI;
-				Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/Menu Materials/SinglePlayerIcon.mat", typeof(Material));
-				AI.transform.Find("Front").GetComponent<MeshRenderer>().material = mat;
+				AI.transform.Find("Front").GetComponent<MeshRenderer>().material = matAI;
 				AI.transform.Find("Text").GetComponent<TextMesh>().text = Constants.AI;
 
 				// Local Network.
 				GameObject localNetWork = Instantiate(newGame, newGame.transform.position, newGame.transform.rotation, newGame.transform.parent);
 				localNetWork.name = Constants.LOCAL_NETWORK;
-				mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/Menu Materials/MultiplayerIcon.mat", typeof(Material));
-				localNetWork.transform.Find("Front").GetComponent<MeshRenderer>().material = mat;
+				localNetWork.transform.Find("Front").GetComponent<MeshRenderer>().material = matLocalNet;
 				localNetWork.transform.Find("Text").GetComponent<TextMesh>().text = Constants.LOCAL_NETWORK;
 				//-----------------------------
 
-
 				StartCoroutine(Rotation(AI, new Vector3(0f, 0f, 180f)));
-				//yield return new WaitWhile(() => mIsRotateDone == false);
 				StartCoroutine(Rotation(localNetWork, new Vector3(0f, 0f, 180f)));
 				yield return new WaitWhile(() => mIsRotateDone == false);
 				mIsRotateDone = false;
@@ -210,7 +202,6 @@ namespace MainMenu
 
 				GameObject text = new GameObject();
 				text.AddComponent<TextMesh>();
-				//text.AddComponent<MeshRenderer>();
 				text.GetComponent<TextMesh>().text = "Игра началась...";
 				text.GetComponent<TextMesh>().characterSize = 0.1f;
 				text.GetComponent<TextMesh>().anchor = TextAnchor.UpperCenter;
@@ -239,17 +230,6 @@ namespace MainMenu
 				yield return null;         // Leave the routine and return here in the next frame
 			}
 			obj.transform.position = targetPoint;
-
-			//yield return null;
-			/*float step = (speed / (obj.transform.position - targetPoint).magnitude) * Time.fixedDeltaTime;
-			float t = 0;
-			while (t <= 1.0f)
-			{
-				t += step; // Goes from 0 to 1, incrementing by step each time
-				target.position = Vector3.Lerp(obj.transform.position, targetPoint, t); // Move objectToMove closer to b
-				yield return new WaitForFixedUpdate();         // Leave the routine and return here in the next frame
-			}
-			target.position = targetPoint;*/
 		}
 
 		IEnumerator Rotation(GameObject obj, Vector3 rotation)

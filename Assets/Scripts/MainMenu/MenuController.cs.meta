@@ -3,7 +3,11 @@ guid: ae9a1c95c97b50442bb1fb155d4ba26b
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - Canvas: {instanceID: 0}
+  - MenuElements: {instanceID: 0}
+  - mAI_Material: {instanceID: 0}
+  - mLocalNet_Material: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
