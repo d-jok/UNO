@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06bbca0b124ddc7469a5c82bdf05d538, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CardDeck:
+  Cards:
   - {fileID: 7493752299873762026, guid: 9b6c384561e8b1e4abfed0d4bdb35271, type: 3}
   - {fileID: 8598708538420365460, guid: 920a348e6409e694a8fa4846aa0a5550, type: 3}
   - {fileID: 3674633010957086797, guid: 9641d87eae5979c438d6563f63096ac8, type: 3}
