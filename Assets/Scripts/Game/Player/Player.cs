@@ -1,9 +1,33 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+namespace Game
 {
-	public string playerName;
-	public List<GameObject> cardsInHand;
+	public class Player
+	{
+		public string playerName;
+		public Vector3 spawnPoint;
+		public List<GameObject> cardsInHand;
+
+		public Player()
+		{
+			playerName = "default";
+			cardsInHand = new List<GameObject>();
+		}
+
+		public Player(string name)
+		{
+			playerName = name;
+			cardsInHand = new List<GameObject>();
+		}
+
+		public Player(string name, Vector3 point, List<GameObject> cards)
+		{
+			playerName = name;
+			spawnPoint = point;
+			cardsInHand = cards;
+		}
+	}
 }

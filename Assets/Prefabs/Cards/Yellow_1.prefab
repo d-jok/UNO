@@ -167,6 +167,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2503942516543823296}
+  - component: {fileID: 2671057411015072775}
+  - component: {fileID: 2568349532304636578}
   m_Layer: 0
   m_Name: Yellow_1
   m_TagString: Untagged
@@ -190,3 +192,30 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
+--- !u!114 &2671057411015072775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8417494518908872968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 395fb18c7fc1f934faf5baba2df86df6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: 1
+  color: 3
+--- !u!65 &2568349532304636578
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8417494518908872968}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.12, y: 0, z: 1.72}
+  m_Center: {x: 0, y: 0, z: 0}

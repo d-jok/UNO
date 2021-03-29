@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEditor;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace MainMenu
 {
@@ -20,8 +22,7 @@ namespace MainMenu
 		//---------------------------------
 
 		private bool isDone;
-		private bool mIsRotateDone;
-		private bool mIsScalingDone;
+		private AnimationScript anim = new AnimationScript();
 
 		private void Awake()
 		{
@@ -42,10 +43,6 @@ namespace MainMenu
 		void Start()
 		{
 			isDone = true;
-			mIsRotateDone = false;
-			mIsScalingDone = false;
-
-
 		}
 
 		private void FixedUpdate()
@@ -103,6 +100,7 @@ namespace MainMenu
 								}
 
 								GameObject AI = MenuElements.transform.Find(Constants.AI).gameObject;
+								PlayerPrefs.SetString("GameType", Constants.AI);
 								StartCoroutine(AnimationAI(AI));
 								break;
 							}
@@ -140,11 +138,9 @@ namespace MainMenu
 				Material matAI = Resources.Load<Material>("Materials/Menu Materials/SinglePlayerIcon");
 				Material matLocalNet = Resources.Load<Material>("Materials/Menu Materials/MultiplayerIcon");
 
-				StartCoroutine(Move(newGame, new Vector3(0f, 1f, 0f)));
-				StartCoroutine(Rotation(newGame, new Vector3(0f, 0f, 180f)));
-
-				yield return new WaitWhile(() => mIsRotateDone == false);
-				mIsRotateDone = false;
+				StartCoroutine(anim.Move(newGame, new Vector3(0f, 1f, 0f), 1f));
+				StartCoroutine(anim.Rotation(newGame, new Vector3(0f, 0f, 180f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
 
 				// Creates elements of new game.
 				// AI
@@ -160,13 +156,12 @@ namespace MainMenu
 				localNetWork.transform.Find("Text").GetComponent<TextMesh>().text = Constants.LOCAL_NETWORK;
 				//-----------------------------
 
-				StartCoroutine(Rotation(AI, new Vector3(0f, 0f, 180f)));
-				StartCoroutine(Rotation(localNetWork, new Vector3(0f, 0f, 180f)));
-				yield return new WaitWhile(() => mIsRotateDone == false);
-				mIsRotateDone = false;
+				StartCoroutine(anim.Rotation(AI, new Vector3(0f, 0f, 180f), 0.3f));
+				StartCoroutine(anim.Rotation(localNetWork, new Vector3(0f, 0f, 180f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
 
-				StartCoroutine(Move(AI, new Vector3(-1f, 1f, 0f)));
-				StartCoroutine(Move(localNetWork, new Vector3(1f, 1f, 0f)));
+				StartCoroutine(anim.Move(AI, new Vector3(-1f, 1f, 0f), 1f));
+				StartCoroutine(anim.Move(localNetWork, new Vector3(1f, 1f, 0f), 1f));
 
 				isDone = true;
 			}
@@ -174,10 +169,10 @@ namespace MainMenu
 
 		IEnumerator AnimationSettings(GameObject settings)
 		{
-			StartCoroutine(Scaling(settings, 20f));
-			yield return new WaitWhile(() => mIsScalingDone == false);
-			mIsScalingDone = false;
+			StartCoroutine(anim.Scaling(settings, 20f));
+			yield return new WaitWhile(() => anim.mIsScalingDone == false);
 
+			// HERE must be a code!!!
 			Destroy(settings);
 		}
 
@@ -187,18 +182,15 @@ namespace MainMenu
 			{
 				isDone = false;
 
-				StartCoroutine(Move(AI, new Vector3(0f, 1f, 0f)));
-				StartCoroutine(Rotation(AI, new Vector3(0f, 0f, 180f)));
-				yield return new WaitWhile(() => mIsRotateDone == false);
-				mIsRotateDone = false;
+				StartCoroutine(anim.Move(AI, new Vector3(0f, 1f, 0f), 1f));
+				StartCoroutine(anim.Rotation(AI, new Vector3(0f, 0f, 180f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
 
-				StartCoroutine(Rotation(AI, new Vector3(0f, 0f, 180f)));
-				yield return new WaitWhile(() => mIsRotateDone == false);
-				mIsRotateDone = false;
+				StartCoroutine(anim.Rotation(AI, new Vector3(0f, 0f, 180f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
 
-				StartCoroutine(Rotation(AI, new Vector3(0f, 10f, 30f)));
-				yield return new WaitWhile(() => mIsRotateDone == false);
-				mIsRotateDone = false;
+				StartCoroutine(anim.Rotation(AI, new Vector3(0f, 10f, 30f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
 
 				GameObject text = new GameObject();
 				text.AddComponent<TextMesh>();
@@ -216,67 +208,6 @@ namespace MainMenu
 			}
 
 			yield return null;
-		}
-
-		IEnumerator Move(GameObject obj, Vector3 targetPoint)
-		{
-			float speed = 1f;
-			float step = (speed / (obj.transform.position - targetPoint).magnitude) * Time.fixedDeltaTime;
-			float t = 0;
-			while (t <= 1.0f)
-			{
-				t += step; // Goes from 0 to 1, incrementing by step each time
-				obj.transform.position = Vector3.Lerp(obj.transform.position, targetPoint, t); // Move objectToMove closer to b
-				yield return null;         // Leave the routine and return here in the next frame
-			}
-			obj.transform.position = targetPoint;
-		}
-
-		IEnumerator Rotation(GameObject obj, Vector3 rotation)
-		{
-			Quaternion start = obj.transform.rotation;
-			Quaternion destination = start * Quaternion.Euler(rotation);
-			float startTime = Time.time;
-			float percentComplete = 0f;
-			while (percentComplete <= 1.0f)
-			{
-				percentComplete = (Time.time - startTime) / 0.3f;
-				obj.transform.rotation = Quaternion.Slerp(start, destination, percentComplete);
-				yield return null;
-			}
-
-			obj.transform.rotation = destination;
-			mIsRotateDone = true;
-		}
-
-		IEnumerator Scaling(GameObject obj, float scale)
-		{
-			float speed = 0.9f; // the more the value, the slower the animation.
-			float endScale = obj.transform.localScale.x * scale;
-
-			float startTime = Time.time;
-			float percentComplete = 0f;
-
-			if (endScale < obj.transform.localScale.x)
-			{
-				while (endScale < obj.transform.localScale.x)
-				{
-					percentComplete = (Time.time - startTime) / speed;
-					obj.transform.localScale -= new Vector3(percentComplete, percentComplete, percentComplete);
-					yield return null;
-				}
-			}
-			else
-			{
-				while (endScale > obj.transform.localScale.x)
-				{
-					percentComplete = (Time.time - startTime) / speed;
-					obj.transform.localScale += new Vector3(percentComplete, percentComplete, percentComplete);
-					yield return null;
-				}
-			}
-
-			mIsScalingDone = true;
 		}
 	}
 }

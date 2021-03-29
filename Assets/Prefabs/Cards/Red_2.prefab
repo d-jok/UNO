@@ -167,6 +167,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2626752874714598365}
+  - component: {fileID: 5093097528169034192}
+  - component: {fileID: -7163435659358436840}
   m_Layer: 0
   m_Name: Red_2
   m_TagString: Untagged
@@ -190,3 +192,30 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
+--- !u!114 &5093097528169034192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8222201878185934613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 395fb18c7fc1f934faf5baba2df86df6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  value: 2
+  color: 0
+--- !u!65 &-7163435659358436840
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8222201878185934613}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.12, y: 0, z: 1.72}
+  m_Center: {x: 0, y: 0, z: 0}

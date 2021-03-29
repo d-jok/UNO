@@ -2,17 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bot : MonoBehaviour
+public class Bot
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+	public string playerName;
+	public Vector3 spawnPoint;
+	public List<GameObject> cardsInHand;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	public Bot()
+	{
+		playerName = "default";
+		cardsInHand = new List<GameObject>();
+	}
+
+	public Bot(string name)
+	{
+		playerName = name;
+		cardsInHand = new List<GameObject>();
+	}
+
+	public Bot(string name, Vector3 point, List<GameObject> cards)
+	{
+		playerName = name;
+		spawnPoint = point;
+		cardsInHand = cards;
+	}
 }
