@@ -9,19 +9,26 @@ namespace Game
 		public bool IsYourTurn;
 		public Player mPlayer;
 
-		private float mIndent;
+		private bool m_isCardChoosed;
 		private int OldCardCount;
+		private float mIndent;
 		private AnimationScript mAnim;
 		private GameObject mGameProcess;
+		private GameObject m_Card;
+		private GameObject m_colorPanel;
 
 		private void Awake()
 		{
 			IsYourTurn = false;
 			mPlayer = new Player();
-			mIndent = 1.12f;
+
+
+			m_isCardChoosed = false;
 			OldCardCount = 0;
+			mIndent = 1.12f;
 			mAnim = new AnimationScript();
 			mGameProcess = GameObject.Find("GameController");
+			m_colorPanel = GameObject.Find("Color_Choose");
 		}
 
 		void Start()
@@ -32,14 +39,69 @@ namespace Game
 
 		public IEnumerator YourTurn()
 		{
+			yield return new WaitWhile(() => m_isCardChoosed == false);
+			m_isCardChoosed = false;
 
+			Debug.Log(m_Card.name);
 
-			/*Destroy(mPlayer.cardsInHand[0]);
-			mPlayer.cardsInHand.RemoveAt(0);*/
+			string name = m_Card.name.Split('(')[0];	// Card name without (Clone)
 
-			yield return null;
-			//yield return new WaitForSecondsRealtime(3);
-			//IsYourTurn = false;
+			switch (name)
+			{
+				case "Color_Change_Plus_4":
+					{
+						Debug.Log("Plus4");
+						//GameObject ColorPanel;
+						Vector3 oldPos = m_colorPanel.transform.position;
+						m_colorPanel.transform.position = new Vector3(0f, 0f, -6f);
+
+						Color_Panel colorPanel = m_colorPanel.GetComponent<Color_Panel>();
+						Debug.Log(colorPanel.name);
+						StartCoroutine(colorPanel.SetColor(m_Card));
+						Choose_Color cardColor = m_Card.GetComponent<Choose_Color>();
+						//cardColor.ChangeColor(color);
+
+						//cardColor.IsColorChanged = false;
+
+						yield return new WaitWhile(() => cardColor.IsColorChanged == false);
+						m_colorPanel.transform.position = oldPos;
+						break;
+					}
+				case "Color_Change":
+					{
+						Debug.Log("Change");
+
+						Vector3 oldPos = m_colorPanel.transform.position;
+						m_colorPanel.transform.position = new Vector3(0f, 0f, -6f);
+
+						//Color color = m_colorPanel.GetComponent<Color_Panel>().GetColor();
+						StartCoroutine(m_colorPanel.GetComponent<Color_Panel>().SetColor(m_Card));
+						Choose_Color cardColor = m_Card.GetComponent<Choose_Color>();
+						//cardColor.ChangeColor(color);
+						//cardColor.IsColorChanged = false;
+
+						yield return new WaitWhile(() => cardColor.IsColorChanged == false);
+						m_colorPanel.transform.position = oldPos;
+						break;
+					}
+				/*case "Deck":
+					{
+
+						break;
+					}*/
+				default:
+					break;
+			}
+
+			mPlayer.cardsInHand.Remove(m_Card);
+
+			GameController controller = mGameProcess.GetComponent<GameController>();
+			StartCoroutine(controller.AnimationMoveCardOnField(m_Card, "Player"));
+			yield return new WaitWhile(() => controller.IsCardMoveDone == false);
+
+			Debug.Log("IS YOUR TURN");
+			IsYourTurn = false;
+			m_Card = null;
 		}
 
 		void Update()
@@ -52,43 +114,26 @@ namespace Game
 				{
 					if (mAnim.mIsMoveDone == true)
 					{
+						GameObject choosedObject = hit.transform.gameObject;
+
 						foreach (var card in mPlayer.cardsInHand)
 						{
-							if (hit.transform.gameObject == card)
+							if (choosedObject == card)
 							{
-								switch (hit.transform.gameObject.name)
+								Card cardValues = choosedObject.GetComponent<Card>();
+								GameController controller = mGameProcess.GetComponent<GameController>();
+								Card upperCardValues = controller.GetUpperCardOnField().GetComponent<Card>();
+
+								if (cardValues.color == upperCardValues.color || cardValues.value == upperCardValues.value)
 								{
-									case "Color_Change_Plus_4":
-										{
-											Debug.Log("Plus4");
-
-											while(hit.transform.gameObject.GetComponent<Choose_Color>().IsColorChanged == false)
-											{
-
-											}
-											break;
-										}
-									case "Color_Change":
-										{
-											Debug.Log("Change");
-
-											while (hit.transform.gameObject.GetComponent<Choose_Color>().IsColorChanged == false)
-											{
-
-											}
-											break;
-										}
-									case "Deck":
-										{
-
-											break;
-										}
-									default:
-										break;
+									m_Card = hit.transform.gameObject;
+									m_isCardChoosed = true;
 								}
-
-								//Debug.Log(card.name + " in hand");
-								IsYourTurn = false;
+								else if (cardValues.color == Color.Black)
+								{
+									m_Card = hit.transform.gameObject;
+									m_isCardChoosed = true;
+								}
 							}
 						}
 

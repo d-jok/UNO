@@ -121,6 +121,7 @@ namespace Game
 				{
 					PlayerFunctions func = mPlayersList[mPlayerNumber].GetComponent<PlayerFunctions>();
 					func.IsYourTurn = true;
+					StartCoroutine(func.YourTurn());
 					yield return new WaitWhile(() => func.IsYourTurn == true);
 					//++mPlayerNumber;
 				}
@@ -135,17 +136,18 @@ namespace Game
 
 				if (mTurnOrder == true)
 				{
-					++mPlayerNumber;
+					//++mPlayerNumber;
+					NextPlayerNumber();
 				}
 				else
 				{
 					PrevPlayerNumber();
 				}
 
-				if (mPlayerNumber == 4)
-				{
-					mPlayerNumber = 0;
-				}
+				//if (mPlayerNumber == 4)
+				//{
+				//	mPlayerNumber = 0;
+				//}
 
 				Debug.Log("*****************************"); //Delete
 			}
@@ -321,6 +323,8 @@ namespace Game
 				}
 
 
+				
+
 				/*for (int j = 0; j < mPlayers.Count; ++j)
 				{
 					card = GetCard();
@@ -368,7 +372,7 @@ namespace Game
 			//yield return null;
 		}
 
-		public IEnumerator AnimationMoveCardOnField(GameObject card)	//EDIT!!!
+		public IEnumerator AnimationMoveCardOnField(GameObject card, string playerType)	//EDIT!!!
 		{
 			IsCardMoveDone = false;
 
@@ -379,7 +383,10 @@ namespace Game
 			{
 				case 0:
 					{
-						card.transform.Rotate(0f, 0f, 180f, Space.Self);
+						if (playerType == "Bot")
+						{
+							card.transform.Rotate(0f, 0f, 180f, Space.Self);
+						}
 						StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 180f + angle, 0f), 0.3f));
 						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z -= 0.1f), 0.5f));
 						break;
@@ -435,7 +442,9 @@ namespace Game
 							{
 								GameObject card = GetCard();
 								StartCoroutine(AnimationGetCard(card, pFunc.mPlayer.spawnPoint));
-								yield return new WaitWhile(() => IsGetCardDone == false);
+
+								StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+								yield return new WaitWhile(() => mAnim.mIsRotateDone == false);
 
 								pFunc.mPlayer.cardsInHand.Add(card);
 								// Need to add WaitWhile.
@@ -445,14 +454,14 @@ namespace Game
 					}
 				case Constants.CHANGE_TURN_ORDER_VALUE:
 					{
-						/*if (mTurnOrder == true)
+						if (mTurnOrder == true)
 						{
 							mTurnOrder = false;
 						}
 						else
 						{
 							mTurnOrder = true;
-						}*/
+						}
 						break;
 					}
 				case Constants.CHANGE_COLOR_PLUS_4_VALUE:
@@ -478,7 +487,9 @@ namespace Game
 							{
 								GameObject card = GetCard();
 								StartCoroutine(AnimationGetCard(card, pFunc.mPlayer.spawnPoint));
-								yield return new WaitWhile(() => IsGetCardDone == false);
+
+								StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+								yield return new WaitWhile(() => mAnim.mIsRotateDone == false);
 
 								pFunc.mPlayer.cardsInHand.Add(card);
 								// Need to add WaitWhile.

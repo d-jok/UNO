@@ -316,6 +316,11 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.8600001
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ad11d5645cb3739479f5a2f9aefc1c31,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 4495d33e82d8a0642ab9edb52396ad04, type: 2}
     - target: {fileID: 919132149155446097, guid: ad11d5645cb3739479f5a2f9aefc1c31,
         type: 3}
       propertyPath: m_Name
@@ -899,6 +904,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: NewGame
       objectReference: {fileID: 0}
+    - target: {fileID: 4327964630416939086, guid: 111a0e11b5aeb074a89c892b3868cd3e,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ca34f17985ced2a4380e6a7bf2fcc888, type: 2}
     - target: {fileID: 5158717867419451569, guid: 111a0e11b5aeb074a89c892b3868cd3e,
         type: 3}
       propertyPath: m_LocalPosition.x

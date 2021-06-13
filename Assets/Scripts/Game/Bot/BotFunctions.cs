@@ -157,13 +157,13 @@ namespace Game
 				card.ChangeColor(Color.Red);
 				yield return new WaitWhile(() => card.IsColorChanged == false);
 
-				StartCoroutine(gameController.AnimationMoveCardOnField(temp));
+				StartCoroutine(gameController.AnimationMoveCardOnField(temp, "Bot"));
 				yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
 			}
 			else
 			{
 				//StartCoroutine(mAnim.Rotation(cardInHand, new Vector3(0f, 0f, 180f), 0.5f));
-				StartCoroutine(gameController.AnimationMoveCardOnField(cardInHand));
+				StartCoroutine(gameController.AnimationMoveCardOnField(cardInHand, "Bot"));
 				yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
 			}
 
