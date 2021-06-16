@@ -14,7 +14,7 @@ namespace Game
 		public GameObject Player;
 
 		private int mPlayerNumber;
-		private bool mTurnOrder;    // if true - clockwise; if false - counterclockwise.
+		private bool m_TurnOrder;    // if true - clockwise; if false - counterclockwise.
 		private bool mIsAbilityDone;
 		private float mPos_Z;
 		private GameObject mDeck;
@@ -31,7 +31,7 @@ namespace Game
 			IsGetCardDone = false;
 			IsCardMoveDone = false;
 			mPlayerNumber = 0;
-			mTurnOrder = true;
+			m_TurnOrder = true;
 			mIsAbilityDone = false;
 			mPos_Z = 0;
 			mAnim = new AnimationScript();
@@ -134,7 +134,7 @@ namespace Game
 					//++mPlayerNumber;
 				}
 
-				if (mTurnOrder == true)
+				if (m_TurnOrder == true)
 				{
 					//++mPlayerNumber;
 					NextPlayerNumber();
@@ -173,7 +173,7 @@ namespace Game
 		{
 			--mPlayerNumber;
 
-			if (mPlayerNumber <= 0)
+			if (mPlayerNumber < 0)
 			{
 				mPlayerNumber = 3;
 			}
@@ -417,14 +417,33 @@ namespace Game
 			{
 				case Constants.SKIP_TURN_VALUE:
 					{
-						NextPlayerNumber();
+						if (m_TurnOrder)
+						{
+							NextPlayerNumber();
+						}
+						else
+						{
+							PrevPlayerNumber();
+						}
 						break;
 					}
 				case Constants.PLUS_2_VALUE:
 					{
-						if (GetNextPlayerNumber() != 0)
+						int playerNumber = 0;
+
+						if (m_TurnOrder)
 						{
-							BotFunctions bFunc = mPlayersList[mPlayerNumber + 1].GetComponent<BotFunctions>();
+							playerNumber = GetNextPlayerNumber();
+						}
+						else
+						{
+							playerNumber = GetPrevPlayerNumber();
+						}
+
+						if (playerNumber != 0)
+						{
+							BotFunctions bFunc = mPlayersList[playerNumber].GetComponent<BotFunctions>();
+
 							for (int i = 0; i < 2; ++i)
 							{
 								GameObject card = GetCard();
@@ -437,7 +456,8 @@ namespace Game
 						}
 						else
 						{
-							PlayerFunctions pFunc = mPlayersList[mPlayerNumber].GetComponent<PlayerFunctions>();
+							PlayerFunctions pFunc = mPlayersList[playerNumber].GetComponent<PlayerFunctions>();
+
 							for (int i = 0; i < 2; ++i)
 							{
 								GameObject card = GetCard();
@@ -454,21 +474,32 @@ namespace Game
 					}
 				case Constants.CHANGE_TURN_ORDER_VALUE:
 					{
-						if (mTurnOrder == true)
+						if (m_TurnOrder == true)
 						{
-							mTurnOrder = false;
+							m_TurnOrder = false;
 						}
 						else
 						{
-							mTurnOrder = true;
+							m_TurnOrder = true;
 						}
 						break;
 					}
 				case Constants.CHANGE_COLOR_PLUS_4_VALUE:
 					{
-						if (GetNextPlayerNumber() != 0)
+						int playerNumber = 0;
+
+						if (m_TurnOrder)
 						{
-							BotFunctions bFunc = mPlayersList[mPlayerNumber + 1].GetComponent<BotFunctions>();
+							playerNumber = GetNextPlayerNumber();
+						}
+						else
+						{
+							playerNumber = GetPrevPlayerNumber();
+						}
+
+						if (playerNumber != 0)
+						{
+							BotFunctions bFunc = mPlayersList[playerNumber].GetComponent<BotFunctions>();
 							for (int i = 0; i < 4; ++i)
 							{
 								GameObject card = GetCard();
@@ -482,7 +513,7 @@ namespace Game
 						}
 						else
 						{
-							PlayerFunctions pFunc = mPlayersList[mPlayerNumber].GetComponent<PlayerFunctions>();
+							PlayerFunctions pFunc = mPlayersList[playerNumber].GetComponent<PlayerFunctions>();
 							for (int i = 0; i < 4; ++i)
 							{
 								GameObject card = GetCard();
