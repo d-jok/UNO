@@ -25,6 +25,8 @@ namespace Game
 		//private List<PlayerFunctions> mPlayers;
 		private List<GameObject> mPlayersList;
 
+//-----------------------------------------------------------------------------
+
 		private void Awake()
 		{
 			IsGameStarted = false;
@@ -112,8 +114,7 @@ namespace Game
 
 		private IEnumerator SingleGameProcess()
 		{
-			//int number = 0;
-			Debug.Log("In");
+			//Debug.Log("In");
 			yield return new WaitWhile(() => IsGameStarted == false);
 
 			while (true)
@@ -124,7 +125,6 @@ namespace Game
 					func.IsYourTurn = true;
 					StartCoroutine(func.YourTurn());
 					yield return new WaitWhile(() => func.IsYourTurn == true);
-					//++mPlayerNumber;
 				}
 				else
 				{
@@ -132,23 +132,16 @@ namespace Game
 					func.IsYourTurn = true;
 					StartCoroutine(func.YourTurn());
 					yield return new WaitWhile(() => func.IsYourTurn == true);
-					//++mPlayerNumber;
 				}
 
 				if (m_TurnOrder == true)
 				{
-					//++mPlayerNumber;
 					NextPlayerNumber();
 				}
 				else
 				{
 					PrevPlayerNumber();
 				}
-
-				//if (mPlayerNumber == 4)
-				//{
-				//	mPlayerNumber = 0;
-				//}
 
 				Debug.Log("*****************************"); //Delete
 			}

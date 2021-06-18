@@ -176,7 +176,18 @@ namespace Game
 			{
 				if (count % 2 == 0 && count > 2)
 				{
-					mIndent -= Constants.CARD_INDENT;
+					if (OldCardCount < count)
+					{
+						mIndent -= Constants.CARD_INDENT;
+					}
+					else if (mIndent + Constants.CARD_INDENT <= mIndent)
+					{
+						mIndent += Constants.CARD_INDENT;
+					}
+					else
+					{
+						mIndent = 1.12f;
+					}
 				}
 
 				if (count % 2 == 0)
