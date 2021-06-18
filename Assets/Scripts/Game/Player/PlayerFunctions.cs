@@ -12,8 +12,9 @@ namespace Game
 		private bool m_isCardChoosed;
 		private int OldCardCount;
 		private float mIndent;
+		private string m_choosedObjectName;
 		private AnimationScript mAnim;
-		private GameObject mGameProcess;
+		private GameObject m_GameProcess;
 		private GameObject m_Card;
 		private GameObject m_colorPanel;
 
@@ -22,12 +23,12 @@ namespace Game
 			IsYourTurn = false;
 			mPlayer = new Player();
 
-
 			m_isCardChoosed = false;
 			OldCardCount = 0;
 			mIndent = 1.12f;
+			m_choosedObjectName = "";
 			mAnim = new AnimationScript();
-			mGameProcess = GameObject.Find("GameController");
+			m_GameProcess = GameObject.Find("GameController");
 			m_colorPanel = GameObject.Find("Color_Choose");
 		}
 
@@ -39,12 +40,20 @@ namespace Game
 
 		public IEnumerator YourTurn()
 		{
+			GameController gameController = m_GameProcess.GetComponent<GameController>();
+
 			yield return new WaitWhile(() => m_isCardChoosed == false);
 			m_isCardChoosed = false;
+			string name = "";
 
-			Debug.Log(m_Card.name);
-
-			string name = m_Card.name.Split('(')[0];	// Card name without (Clone)
+			if (m_choosedObjectName.Length == 0)
+			{
+				name = m_Card.name.Split('(')[0];    // Card name without (Clone)
+			}
+			else
+			{
+				name = m_choosedObjectName;
+			}
 
 			switch (name)
 			{
@@ -84,24 +93,34 @@ namespace Game
 						m_colorPanel.transform.position = oldPos;
 						break;
 					}
-				/*case "Deck":
+				case "Deck":
 					{
+						GameObject newCard = gameController.GetCard();
 
+						StartCoroutine(gameController.AnimationGetCard(newCard, mPlayer.spawnPoint));
+						StartCoroutine(mAnim.Rotation(newCard, new Vector3(0f, 0f, 180f), 0.3f));
+						yield return new WaitWhile(() => gameController.IsGetCardDone == false);						
+						yield return new WaitWhile(() => mAnim.mIsRotateDone == false);
+						mPlayer.cardsInHand.Add(newCard);
 						break;
-					}*/
+					}
 				default:
 					break;
 			}
 
-			mPlayer.cardsInHand.Remove(m_Card);
+			if (m_Card != null)
+			{
+				mPlayer.cardsInHand.Remove(m_Card);
 
-			GameController controller = mGameProcess.GetComponent<GameController>();
-			StartCoroutine(controller.AnimationMoveCardOnField(m_Card, "Player"));
-			yield return new WaitWhile(() => controller.IsCardMoveDone == false);
+				GameController controller = m_GameProcess.GetComponent<GameController>();
+				StartCoroutine(controller.AnimationMoveCardOnField(m_Card, "Player"));
+				yield return new WaitWhile(() => controller.IsCardMoveDone == false);
+			}
 
 			Debug.Log("IS YOUR TURN");
 			IsYourTurn = false;
 			m_Card = null;
+			m_choosedObjectName = "";
 		}
 
 		void Update()
@@ -116,50 +135,39 @@ namespace Game
 					{
 						GameObject choosedObject = hit.transform.gameObject;
 
-						foreach (var card in mPlayer.cardsInHand)
+						if (choosedObject.name == "Deck")
 						{
-							if (choosedObject == card)
+							m_choosedObjectName = choosedObject.name;
+							m_isCardChoosed = true;
+						}
+						else
+						{
+							foreach (var card in mPlayer.cardsInHand)
 							{
-								Card cardValues = choosedObject.GetComponent<Card>();
-								GameController controller = mGameProcess.GetComponent<GameController>();
-								Card upperCardValues = controller.GetUpperCardOnField().GetComponent<Card>();
+								if (choosedObject == card)
+								{
+									Card cardValues = choosedObject.GetComponent<Card>();
+									GameController controller = m_GameProcess.GetComponent<GameController>();
+									Card upperCardValues = controller.GetUpperCardOnField().GetComponent<Card>();
 
-								if (cardValues.color == upperCardValues.color || cardValues.value == upperCardValues.value)
-								{
-									m_Card = hit.transform.gameObject;
-									m_isCardChoosed = true;
-								}
-								else if (cardValues.color == Color.Black)
-								{
-									m_Card = hit.transform.gameObject;
-									m_isCardChoosed = true;
+									if (cardValues.color == upperCardValues.color || cardValues.value == upperCardValues.value)
+									{
+										m_Card = hit.transform.gameObject;
+										m_isCardChoosed = true;
+									}
+									else if (cardValues.color == Color.Black)
+									{
+										m_Card = hit.transform.gameObject;
+										m_isCardChoosed = true;
+									}
+
+									break;
 								}
 							}
 						}
-
-						/*switch (hit.transform.gameObject.name)
-						{
-							case "Deck":
-								{
-									//StartCoroutine(AnimationGetCard());
-									IsYourTurn = false;
-									break;
-								}
-							default:
-								break;
-						}*/
 					}
 				}
 			}
-
-			/*if (mGameProcess.GetComponent<GameController>().IsGameStarted && IsYourTurn)
-			{
-				var upperCard = mGameProcess.GetComponent<GameController>().GetUpperCardOnField();
-				if (upperCard)//EDIT!!!
-				{
-					Debug.Log(upperCard.name);
-				}
-			}*/
 
 			//------------------------------------
 			int count = mPlayer.cardsInHand.Count;

@@ -62,6 +62,7 @@ namespace Game
 			mCardDeck = new List<GameObject>();
 			mDeck = Instantiate(Player, new Vector3(-5f, 3f, z), Quaternion.identity);
 			mDeck.name = "Deck";
+			mDeck.GetComponent<BoxCollider>().enabled = true;
 
 			foreach (var card in Cards)
 			{
