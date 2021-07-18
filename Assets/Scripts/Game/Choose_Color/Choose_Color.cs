@@ -8,8 +8,6 @@ namespace Game
 	{
 		public bool IsColorChanged;
 
-		//private GameObject ColorPanel;
-
 		private bool mIsPlayed;
 		public bool mIsInHand;
 		private Card mCard;
@@ -18,49 +16,11 @@ namespace Game
 		void Start()
 		{
 			IsColorChanged = false;
-			//ColorPanel = GameObject.Find("Color_Choose");
 
 			mIsPlayed = false;
 			mIsInHand = false;
 			mCard = this.GetComponent<Card>();
 			mOldPos = new Vector3(-20f, 0f, -6f);
-		}
-
-		void Update()
-		{
-			/*if (Input.GetMouseButtonUp(0) && mIsInHand == true)
-			{
-				RaycastHit hit;
-
-				if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
-				{
-					switch (hit.transform.gameObject.name)
-					{
-						case ("Red"):
-							{
-								ChangeColor(Color.Red);
-								break;
-							}
-						case ("Green"):
-							{
-								ChangeColor(Color.Green);
-								break;
-							}
-						case ("Blue"):
-							{
-								ChangeColor(Color.Blue);
-								break;
-							}
-						case ("Yellow"):
-							{
-								ChangeColor(Color.Yellow);
-								break;
-							}
-						default:
-							break;
-					}
-				}
-			}*/
 		}
 
 		public void ChangeColor(Color color)
@@ -82,7 +42,6 @@ namespace Game
 			Material change_color_material = Resources.Load<Material>(path);
 			this.transform.Find("Front").GetComponent<MeshRenderer>().material = change_color_material;
 			mCard.color = color;
-			//ColorPanel.transform.position = mOldPos;
 			mIsInHand = false;
 			mIsPlayed = true;
 			IsColorChanged = true;
@@ -92,7 +51,6 @@ namespace Game
 		{
 			if (mIsPlayed == false && mIsInHand == true)
 			{
-				//ColorPanel.transform.position = new Vector3(0f, 0f, -6f);
 				mIsPlayed = true;
 			}
 		}

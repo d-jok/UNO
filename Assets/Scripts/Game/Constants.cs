@@ -19,5 +19,9 @@ namespace Game
 		public const int CHANGE_TURN_ORDER_VALUE = 12;
 		public const int CHANGE_COLOR_VALUE = 13;
 		public const int CHANGE_COLOR_PLUS_4_VALUE = 14;
+
+		// Game objects pathes.
+		public const string UNO_BUTTON_PATH = "Prefabs/Uno_Button";
+		public const string UNO_POP_UP_PATH = "Prefabs/Uno_PopUp";
 	}
 }

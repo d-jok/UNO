@@ -57,17 +57,5 @@ namespace Game
 			card.GetComponent<Choose_Color>().ChangeColor(m_color);
 			m_color = Color.Black;
 		}
-
-		/*public Color GetColor()
-		{
-			m_color = Color.Black;
-
-			while (m_color == Color.Black)
-			{
-
-			}
-
-			return m_color;
-		}*/
 	}
 }

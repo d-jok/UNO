@@ -29,8 +29,28 @@ namespace Game
 		void Update()
 		{
 			
+		}
 
-			//------------------------------------
+		private void CardsPositioning(Vector3 startPos)
+		{
+			foreach (var card in Bot.cardsInHand)
+			{
+				StartCoroutine(mAnim.Move(card, startPos, 1f));
+				//yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
+				//yield return null;
+
+				startPos.x += mIndent;
+				startPos.z -= 0.01f;
+			}
+
+			IsPositioningDone = true;
+		}
+
+		public void AddCard(GameObject card)
+		{
+			Bot.cardsInHand.Add(card);
+			IsPositioningDone = false;
+
 			int count = Bot.cardsInHand.Count;
 
 			if (OldCardCount != count)
@@ -77,20 +97,6 @@ namespace Game
 
 				OldCardCount = count;
 			}
-		}
-
-		private void CardsPositioning(Vector3 startPos)
-		{
-			IsPositioningDone = false;
-
-			foreach (var card in Bot.cardsInHand)
-			{
-				StartCoroutine(mAnim.Move(card, startPos, 1f));
-				startPos.x += mIndent;
-				startPos.z -= 0.01f;
-			}
-
-			IsPositioningDone = true;
 		}
 
 		public IEnumerator YourTurn()
@@ -159,8 +165,8 @@ namespace Game
 					default:
 						break;
 				}
-				StartCoroutine(gameController.AnimationGetCard(newCard, Bot.spawnPoint));
-				yield return new WaitWhile(() => gameController.IsGetCardDone == false);
+				yield return StartCoroutine(gameController.AnimationGetCard(newCard, Bot.spawnPoint));
+				//yield return new WaitWhile(() => gameController.IsGetCardDone == false);
 				Bot.cardsInHand.Add(newCard);
 			}
 			else if (temp != null)
@@ -170,17 +176,18 @@ namespace Game
 
 				// ADD choose color method!!!
 
+				// ERROR HERE!!!!!!
 				card.ChangeColor(Color.Red);
 				yield return new WaitWhile(() => card.IsColorChanged == false);
 
-				StartCoroutine(gameController.AnimationMoveCardOnField(temp, "Bot"));
-				yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
+				yield return StartCoroutine(gameController.AnimationMoveCardOnField(temp, "Bot"));
+				//yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
 			}
 			else
 			{
 				//StartCoroutine(mAnim.Rotation(cardInHand, new Vector3(0f, 0f, 180f), 0.5f));
-				StartCoroutine(gameController.AnimationMoveCardOnField(cardInHand, "Bot"));
-				yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
+				yield return StartCoroutine(gameController.AnimationMoveCardOnField(cardInHand, "Bot"));
+				//yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
 			}
 
 			temp = null;

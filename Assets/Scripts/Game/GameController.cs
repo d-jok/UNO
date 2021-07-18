@@ -29,12 +29,14 @@ namespace Game
 
 		private void Awake()
 		{
+			SpawnGameObject(Constants.UNO_BUTTON_PATH, new Vector3(-15f, 0f, 0f));
+			SpawnGameObject(Constants.UNO_POP_UP_PATH, new Vector3(-15f, 0f, 1f));
+
 			IsGameStarted = false;
 			IsGetCardDone = false;
 			IsCardMoveDone = false;
 			mPlayerNumber = 0;
 			m_TurnOrder = true;
-			mIsAbilityDone = false;
 			mPos_Z = 0;
 			mAnim = new AnimationScript();
 			mCardsOnField = new List<GameObject>();
@@ -107,6 +109,12 @@ namespace Game
 			}
 		}
 
+		private void SpawnGameObject(string _path, Vector3 _position)
+		{
+			GameObject gameObject = Resources.Load(_path) as GameObject;
+			Instantiate(gameObject, _position, Quaternion.identity);
+		}
+
 		private void GameProcess()
 		{
 
@@ -114,7 +122,6 @@ namespace Game
 
 		private IEnumerator SingleGameProcess()
 		{
-			//Debug.Log("In");
 			yield return new WaitWhile(() => IsGameStarted == false);
 
 			while (true)
@@ -122,16 +129,12 @@ namespace Game
 				if (mPlayerNumber == 0)
 				{
 					PlayerFunctions func = mPlayersList[mPlayerNumber].GetComponent<PlayerFunctions>();
-					func.IsYourTurn = true;
-					StartCoroutine(func.YourTurn());
-					yield return new WaitWhile(() => func.IsYourTurn == true);
+					yield return StartCoroutine(func.YourTurn());
 				}
 				else
 				{
 					BotFunctions func = mPlayersList[mPlayerNumber].GetComponent<BotFunctions>();
-					func.IsYourTurn = true;
-					StartCoroutine(func.YourTurn());
-					yield return new WaitWhile(() => func.IsYourTurn == true);
+					yield return StartCoroutine(func.YourTurn());
 				}
 
 				if (m_TurnOrder == true)
@@ -295,24 +298,23 @@ namespace Game
 				{
 					card = GetCard();
 
-					if (j == 0)
-					{
-						StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
-					}
+					//if (j == 0)
+					//{
+					//	StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+					//}
 
 					if (mPlayersList[j].name.Contains("Player"))
 					{
-						Player player = mPlayersList[j].GetComponent<PlayerFunctions>().mPlayer;
-						StartCoroutine(mAnim.Move(card, player.spawnPoint, 1f));
-						yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
-						player.cardsInHand.Add(card);
+						PlayerFunctions playerFunc = mPlayersList[j].GetComponent<PlayerFunctions>();
+						yield return StartCoroutine(playerFunc.AddCard(card));
 					}
 					else
 					{
-						Bot bot = mPlayersList[j].GetComponent<BotFunctions>().Bot;
-						StartCoroutine(mAnim.Move(card, bot.spawnPoint, 1f));
+						BotFunctions botFunc = mPlayersList[j].GetComponent<BotFunctions>();
+						Vector3 spawnPoint = botFunc.Bot.spawnPoint;
+						StartCoroutine(mAnim.Move(card, spawnPoint, 1f));
 						yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
-						bot.cardsInHand.Add(card);
+						botFunc.AddCard(card);
 					}
 				}
 
@@ -396,8 +398,8 @@ namespace Game
 			}
 
 			mCardsOnField.Add(card);
-			StartCoroutine(CardsAbilities());   // HERE????
-			yield return new WaitWhile(() => mIsAbilityDone == false);
+			yield return StartCoroutine(CardsAbilities());   // HERE????
+			//yield return new WaitWhile(() => mIsAbilityDone == false);
 			IsCardMoveDone = true;
 
 			yield return null;
@@ -405,8 +407,6 @@ namespace Game
 
 		private IEnumerator CardsAbilities()
 		{
-			mIsAbilityDone = false;
-
 			switch (mCardsOnField[mCardsOnField.Count - 1].GetComponent<Card>().value)
 			{
 				case Constants.SKIP_TURN_VALUE:
@@ -441,11 +441,9 @@ namespace Game
 							for (int i = 0; i < 2; ++i)
 							{
 								GameObject card = GetCard();
-								StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
-								yield return new WaitWhile(() => IsGetCardDone == false);
-
-								bFunc.Bot.cardsInHand.Add(card);    //Maybe smth wrong.
-								yield return new WaitWhile(() => bFunc.IsPositioningDone == false);
+								yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
+								bFunc.AddCard(card);
+								// AddCard change to coroutine.
 							}
 						}
 						else
@@ -455,13 +453,7 @@ namespace Game
 							for (int i = 0; i < 2; ++i)
 							{
 								GameObject card = GetCard();
-								StartCoroutine(AnimationGetCard(card, pFunc.mPlayer.spawnPoint));
-
-								StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
-								yield return new WaitWhile(() => mAnim.mIsRotateDone == false);
-
-								pFunc.mPlayer.cardsInHand.Add(card);
-								// Need to add WaitWhile.
+								yield return StartCoroutine(pFunc.AddCard(card));
 							}
 						}
 						break;
@@ -497,11 +489,10 @@ namespace Game
 							for (int i = 0; i < 4; ++i)
 							{
 								GameObject card = GetCard();
-								StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
-								yield return new WaitWhile(() => IsGetCardDone == false);
+								yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
+								bFunc.AddCard(card);
 
-								bFunc.Bot.cardsInHand.Add(card);    //Maybe smth wrong.
-								yield return new WaitWhile(() => bFunc.IsPositioningDone == false);
+								// AddCard change to coroutine.
 							}
 							NextPlayerNumber();
 						}
@@ -511,13 +502,7 @@ namespace Game
 							for (int i = 0; i < 4; ++i)
 							{
 								GameObject card = GetCard();
-								StartCoroutine(AnimationGetCard(card, pFunc.mPlayer.spawnPoint));
-
-								StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
-								yield return new WaitWhile(() => mAnim.mIsRotateDone == false);
-
-								pFunc.mPlayer.cardsInHand.Add(card);
-								// Need to add WaitWhile.
+								yield return StartCoroutine(pFunc.AddCard(card));
 							}
 							NextPlayerNumber();
 						}
@@ -526,8 +511,6 @@ namespace Game
 				default:
 					break;
 			}
-
-			mIsAbilityDone = true;
 		}
 	}
 }
