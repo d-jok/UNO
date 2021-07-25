@@ -131,7 +131,7 @@ namespace Game
 				mPlayer.cardsInHand.Remove(m_Card);
 
 				GameController controller = m_GameProcess.GetComponent<GameController>();
-				yield return StartCoroutine(controller.AnimationMoveCardOnField(m_Card, "Player"));
+				yield return StartCoroutine(controller.MoveCardOnField(m_Card, "Player"));
 			}
 
 			// UNO Button

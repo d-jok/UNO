@@ -6,6 +6,7 @@ namespace Game
 {
 	public class GameController : MonoBehaviour
 	{
+		// Public:
 		public bool IsGameStarted;
 		public bool IsGetCardDone;
 		public bool IsCardMoveDone;
@@ -13,6 +14,7 @@ namespace Game
 		public GameObject Bot;
 		public GameObject Player;
 
+		// Private:
 		private int mPlayerNumber;
 		private bool m_TurnOrder;    // if true - clockwise; if false - counterclockwise.
 		private bool mIsAbilityDone;
@@ -20,10 +22,11 @@ namespace Game
 		private GameObject mDeck;
 		private AnimationScript mAnim;
 		private List<GameObject> mCardDeck;
-		private List<GameObject> mCardsOnField { get; set; }
+		private List<GameObject> m_CardsOnField { get; set; }
 		private List<string> mNames;
 		//private List<PlayerFunctions> mPlayers;
 		private List<GameObject> mPlayersList;
+		private List<GameObject> m_Discard;
 
 //-----------------------------------------------------------------------------
 
@@ -39,8 +42,9 @@ namespace Game
 			m_TurnOrder = true;
 			mPos_Z = 0;
 			mAnim = new AnimationScript();
-			mCardsOnField = new List<GameObject>();
+			m_CardsOnField = new List<GameObject>();
 			mPlayersList = new List<GameObject>();
+			m_Discard = new List<GameObject>();
 
 			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 			{
@@ -67,6 +71,7 @@ namespace Game
 			mDeck = Instantiate(Player, new Vector3(-5f, 3f, z), Quaternion.identity);
 			mDeck.name = "Deck";
 			mDeck.GetComponent<BoxCollider>().enabled = true;
+			mDeck.GetComponent<PlayerFunctions>().enabled = false;
 
 			foreach (var card in Cards)
 			{
@@ -126,6 +131,11 @@ namespace Game
 
 			while (true)
 			{
+				if (mCardDeck.Count == 0)
+				{
+					yield return StartCoroutine(RestoreDeck());
+				}
+
 				if (mPlayerNumber == 0)
 				{
 					PlayerFunctions func = mPlayersList[mPlayerNumber].GetComponent<PlayerFunctions>();
@@ -272,9 +282,9 @@ namespace Game
 
 		public GameObject GetUpperCardOnField()
 		{
-			int size = mCardsOnField.Count;
-			Debug.Log(mCardsOnField[size - 1].name);
-			return mCardsOnField[size - 1];
+			int size = m_CardsOnField.Count;
+			Debug.Log(m_CardsOnField[size - 1].name);
+			return m_CardsOnField[size - 1];
 		}
 
 		public GameObject GetCard()
@@ -349,10 +359,68 @@ namespace Game
 			StartCoroutine(mAnim.Move(card, new Vector3(0, 0, 0), 1f));
 			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
 
-			mCardsOnField.Add(card);
+			m_CardsOnField.Add(card);
 			IsGameStarted = true;
 
 			yield return null;
+		}
+
+		private IEnumerator RestoreDeck()
+		{
+			foreach (var card in m_Discard)
+			{
+				yield return StartCoroutine(AnimationMoveCardInDeck(card));
+				mCardDeck.Add(card);
+				m_Discard.Remove(card);
+			}
+		}
+
+		private IEnumerator CardsOnFieldPositioning()
+		{
+			int count = m_CardsOnField.Count;
+
+			if (count >= 3)
+			{
+				float posZ = mPos_Z;
+
+				for (int i = m_CardsOnField.Count - 1; i >= 0; --i)
+				{
+					StartCoroutine(mAnim.Move(m_CardsOnField[i], new Vector3(0f, 0f, posZ += 0.1f), 1f));
+				}
+			}
+			else
+			{
+				mPos_Z -= 0.1f;
+			}
+
+			yield return null;
+		}
+
+		public IEnumerator MoveCardOnField(GameObject card, string playerType)
+		{
+			IsCardMoveDone = false;
+
+			yield return StartCoroutine(CardsOnFieldPositioning());
+			yield return StartCoroutine(AnimationMoveCardOnField(card, playerType));
+			m_CardsOnField.Add(card);
+			int count = m_CardsOnField.Count;
+
+			if (count > 3)
+			{
+				Vector3 discard_pos = new Vector3(-15f, 0f, 0f);
+				GameObject removedCard = m_CardsOnField[0];
+				m_CardsOnField.RemoveAt(0);
+				removedCard.SetActive(false);
+
+				StartCoroutine(mAnim.Rotation(removedCard, new Vector3(0f, 0f, 180f), 0.3f));
+				StartCoroutine(mAnim.Move(removedCard, new Vector3(-15f, 0f, 0f), 1f));
+
+				m_Discard.Add(removedCard);
+			}
+
+			yield return StartCoroutine(CardsAbilities());   // HERE????
+
+			IsCardMoveDone = true;
 		}
 
 		public IEnumerator AnimationGetCard(GameObject card, Vector3 position)	// CHANGE !!!!
@@ -370,8 +438,6 @@ namespace Game
 
 		public IEnumerator AnimationMoveCardOnField(GameObject card, string playerType)	//EDIT!!!
 		{
-			IsCardMoveDone = false;
-
 			int number = Random.Range(0, 1);
 			int angle = Random.Range(-10, 10);
 
@@ -384,30 +450,35 @@ namespace Game
 							card.transform.Rotate(0f, 0f, 180f, Space.Self);
 						}
 						StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 180f + angle, 0f), 0.3f));
-						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z -= 0.1f), 0.5f));
+						//StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z -= 0.1f), 0.5f));
+						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z), 0.5f));
 						break;
 					}
 				case 1:	//EDIT!!
 					{
 						StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.2f));
-						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z -= 0.1f), 1f));
+						//StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z -= 0.1f), 1f));
+						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z), 1f));
 						break;
 					}
 				default:
 					break;
 			}
 
-			mCardsOnField.Add(card);
-			yield return StartCoroutine(CardsAbilities());   // HERE????
-			//yield return new WaitWhile(() => mIsAbilityDone == false);
-			IsCardMoveDone = true;
-
 			yield return null;
+		}
+
+		private IEnumerator AnimationMoveCardInDeck(GameObject card)
+		{
+			int count = mCardDeck.Count;
+			Vector3 deck_Pos = mDeck.transform.position;
+			deck_Pos.z += count * 0.01f;
+			yield return StartCoroutine(mAnim.Move(card, deck_Pos, 1f));
 		}
 
 		private IEnumerator CardsAbilities()
 		{
-			switch (mCardsOnField[mCardsOnField.Count - 1].GetComponent<Card>().value)
+			switch (m_CardsOnField[m_CardsOnField.Count - 1].GetComponent<Card>().value)
 			{
 				case Constants.SKIP_TURN_VALUE:
 					{
@@ -424,6 +495,11 @@ namespace Game
 				case Constants.PLUS_2_VALUE:
 					{
 						int playerNumber = 0;
+
+						if (mCardDeck.Count < 2)
+						{
+							yield return StartCoroutine(RestoreDeck());
+						}
 
 						if (m_TurnOrder)
 						{
@@ -473,6 +549,11 @@ namespace Game
 				case Constants.CHANGE_COLOR_PLUS_4_VALUE:
 					{
 						int playerNumber = 0;
+
+						if (mCardDeck.Count < 4)
+						{
+							yield return StartCoroutine(RestoreDeck());
+						}
 
 						if (m_TurnOrder)
 						{
