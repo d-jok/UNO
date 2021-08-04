@@ -23,5 +23,6 @@ namespace Game
 		// Game objects pathes.
 		public const string UNO_BUTTON_PATH = "Prefabs/Uno_Button";
 		public const string UNO_POP_UP_PATH = "Prefabs/Uno_PopUp";
+		public const string TURN_ORDER_ROTATION_PATH = "Prefabs/Effects/Rotation";
 	}
 }

@@ -13,6 +13,7 @@ namespace Game
 		public List<GameObject> Cards;
 		public GameObject Bot;
 		public GameObject Player;
+		public GameObject m_TurnOrderArrows;
 
 		// Private:
 		private int mPlayerNumber;
@@ -84,7 +85,7 @@ namespace Game
 
 			SpawnPlayers();
 			StartCoroutine(CardsDistribution());
-
+			
 			//---------------------------------------------
 			StartCoroutine(SingleGameProcess());
 		}
@@ -128,6 +129,7 @@ namespace Game
 		private IEnumerator SingleGameProcess()
 		{
 			yield return new WaitWhile(() => IsGameStarted == false);
+			m_TurnOrderArrows.SetActive(true);
 
 			while (true)
 			{
@@ -539,10 +541,12 @@ namespace Game
 						if (m_TurnOrder == true)
 						{
 							m_TurnOrder = false;
+							m_TurnOrderArrows.transform.Rotate(0f, 180f, 0f);
 						}
 						else
 						{
 							m_TurnOrder = true;
+							m_TurnOrderArrows.transform.Rotate(0f, 0f, 0f);
 						}
 						break;
 					}
