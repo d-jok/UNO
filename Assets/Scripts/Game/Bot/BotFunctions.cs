@@ -7,7 +7,6 @@ namespace Game
 	public class BotFunctions : MonoBehaviour
 	{
 		public bool IsYourTurn;
-		public bool IsPositioningDone;
 		public Bot Bot;
 
 		private float mIndent;
@@ -18,7 +17,6 @@ namespace Game
 		private void Awake()
 		{
 			IsYourTurn = false;
-			IsPositioningDone = false;
 			Bot = new Bot();
 			mIndent = 1.12f;
 			OldCardCount = 0;
@@ -31,72 +29,129 @@ namespace Game
 			
 		}
 
-		private void CardsPositioning(Vector3 startPos)
+		private IEnumerator CardsPositioning()
 		{
+			int count = Bot.cardsInHand.Count;
+
+			if (count % 2 == 0 && count > 2)
+			{
+				if (OldCardCount < count)
+				{
+					mIndent -= Constants.CARD_INDENT;
+				}
+				else if (mIndent + Constants.CARD_INDENT <= mIndent)
+				{
+					mIndent += Constants.CARD_INDENT;
+				}
+				else
+				{
+					mIndent = 1.12f;
+				}
+			}
+
+			Vector3 startPos;
+
+			if (count % 2 == 0)
+			{
+				startPos = new Vector3(
+					(Bot.spawnPoint.x - 0.56f) - (((count / 2) - 1) * mIndent),
+					Bot.spawnPoint.y,
+					Bot.spawnPoint.z);
+			}
+			else
+			{
+				startPos = new Vector3(
+					Bot.spawnPoint.x - (count / 2 * mIndent),
+					Bot.spawnPoint.y,
+					Bot.spawnPoint.z);
+			}
+
+			OldCardCount = Bot.cardsInHand.Count;
+
 			foreach (var card in Bot.cardsInHand)
 			{
-				StartCoroutine(mAnim.Move(card, startPos, 1f));
-				//yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
-				//yield return null;
+				if (card.name.Contains("Color_Change_Plus_4") || card.name.Contains("Color_Change"))  // Temporarily
+				{
+					card.GetComponent<Choose_Color>().mIsInHand = true;
+					Debug.Log("In-Hand");
+				}
 
+				StartCoroutine(mAnim.Move(card, startPos, 1f));
 				startPos.x += mIndent;
 				startPos.z -= 0.01f;
 			}
 
-			IsPositioningDone = true;
+			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
+
+
+
+
+
+
+			//foreach (var card in Bot.cardsInHand)
+			//{
+			//	StartCoroutine(mAnim.Move(card, startPos, 1f));
+			//	//yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
+			//	//yield return null;
+
+			//	startPos.x += mIndent;
+			//	startPos.z -= 0.01f;
+			//}
 		}
 
-		public void AddCard(GameObject card)
+		public IEnumerator AddCard(GameObject card)
 		{
 			Bot.cardsInHand.Add(card);
-			IsPositioningDone = false;
+			yield return StartCoroutine(CardsPositioning());
 
-			int count = Bot.cardsInHand.Count;
+			//IsPositioningDone = false;
 
-			if (OldCardCount != count)
-			{
-				//if (count % 2 == 0 && count > 2)
-				//{
-				//	mIndent -= Constants.CARD_INDENT;
-				//}
+			//int count = Bot.cardsInHand.Count;
 
-				if (count % 2 == 0 && count > 2)
-				{
-					if (OldCardCount < count)
-					{
-						mIndent -= Constants.CARD_INDENT;
-					}
-					else if (mIndent + Constants.CARD_INDENT <= mIndent)
-					{
-						mIndent += Constants.CARD_INDENT;
-					}
-					else
-					{
-						mIndent = 1.12f;
-					}
-				}
+			//if (OldCardCount != count)
+			//{
+			//	//if (count % 2 == 0 && count > 2)
+			//	//{
+			//	//	mIndent -= Constants.CARD_INDENT;
+			//	//}
 
-				if (count % 2 == 0)
-				{
-					Vector3 startPos = new Vector3(
-						(Bot.spawnPoint.x - 0.56f) - (((count / 2) - 1) * mIndent),
-						Bot.spawnPoint.y,
-						Bot.spawnPoint.z);
+			//	if (count % 2 == 0 && count > 2)
+			//	{
+			//		if (OldCardCount < count)
+			//		{
+			//			mIndent -= Constants.CARD_INDENT;
+			//		}
+			//		else if (mIndent + Constants.CARD_INDENT <= mIndent)
+			//		{
+			//			mIndent += Constants.CARD_INDENT;
+			//		}
+			//		else
+			//		{
+			//			mIndent = 1.12f;
+			//		}
+			//	}
 
-					CardsPositioning(startPos);
-				}
-				else
-				{
-					Vector3 startPos = new Vector3(
-						Bot.spawnPoint.x - (count / 2 * mIndent),
-						Bot.spawnPoint.y,
-						Bot.spawnPoint.z);
+			//	if (count % 2 == 0)
+			//	{
+			//		Vector3 startPos = new Vector3(
+			//			(Bot.spawnPoint.x - 0.56f) - (((count / 2) - 1) * mIndent),
+			//			Bot.spawnPoint.y,
+			//			Bot.spawnPoint.z);
 
-					CardsPositioning(startPos);
-				}
+			//		CardsPositioning(startPos);
+			//	}
+			//	else
+			//	{
+			//		Vector3 startPos = new Vector3(
+			//			Bot.spawnPoint.x - (count / 2 * mIndent),
+			//			Bot.spawnPoint.y,
+			//			Bot.spawnPoint.z);
 
-				OldCardCount = count;
-			}
+			//		CardsPositioning(startPos);
+			//	}
+
+			//	OldCardCount = count;
+			//}
 		}
 
 		public IEnumerator YourTurn()
@@ -189,6 +244,8 @@ namespace Game
 				yield return StartCoroutine(gameController.MoveCardOnField(cardInHand, "Bot"));
 				//yield return new WaitWhile(() => gameController.IsCardMoveDone == false);
 			}
+
+			yield return StartCoroutine(CardsPositioning());
 
 			temp = null;
 			IsYourTurn = false;

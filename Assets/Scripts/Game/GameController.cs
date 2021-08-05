@@ -79,7 +79,6 @@ namespace Game
 				GameObject obj = Instantiate(card, new Vector3(-5f, 3f, z), Quaternion.Euler(new Vector3(-90f, -180f, 0f)));
 				obj.transform.SetParent(mDeck.transform);
 				mCardDeck.Add(obj);
-				//mCardDeck.Add(Instantiate(card, new Vector3(0f, 0f, z), Quaternion.Euler(new Vector3(-90f, -180f, 0f))));
 				z += 0.01f;
 			}
 
@@ -326,7 +325,7 @@ namespace Game
 						Vector3 spawnPoint = botFunc.Bot.spawnPoint;
 						StartCoroutine(mAnim.Move(card, spawnPoint, 1f));
 						yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
-						botFunc.AddCard(card);
+						yield return StartCoroutine(botFunc.AddCard(card));
 					}
 				}
 
@@ -520,8 +519,7 @@ namespace Game
 							{
 								GameObject card = GetCard();
 								yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
-								bFunc.AddCard(card);
-								// AddCard change to coroutine.
+								yield return StartCoroutine(bFunc.AddCard(card));
 							}
 						}
 						else
@@ -546,7 +544,7 @@ namespace Game
 						else
 						{
 							m_TurnOrder = true;
-							m_TurnOrderArrows.transform.Rotate(0f, 0f, 0f);
+							m_TurnOrderArrows.transform.Rotate(0f, -180f, 0f);
 						}
 						break;
 					}
@@ -575,9 +573,7 @@ namespace Game
 							{
 								GameObject card = GetCard();
 								yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
-								bFunc.AddCard(card);
-
-								// AddCard change to coroutine.
+								yield return StartCoroutine(bFunc.AddCard(card));
 							}
 							NextPlayerNumber();
 						}
