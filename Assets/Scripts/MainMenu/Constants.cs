@@ -10,6 +10,8 @@ namespace MainMenu
 		public const string SETTINGS = "Settings";
 		public const string AI = "AI";
 		public const string LOCAL_NETWORK = "Local Network";
+		public const string SERVER = "Server";
+		public const string CLIENT = "Client";
 		public const string BACK = "PowerButton";
 	}
 }

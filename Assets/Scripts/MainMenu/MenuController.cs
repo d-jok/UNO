@@ -17,8 +17,13 @@ namespace MainMenu
 		// UI Elements
 		private GameObject mImage;
 		private GameObject mLogo;
-		private GameObject mPageTitle;
+		private GameObject m_PageTitle;
 		private GameObject mPowerOffButton;
+		private GameObject m_ServerPanel;
+		private GameObject m_ClientPanel;
+		private GameObject m_NetworkController;
+		private NetworkServer.Server m_Server;
+		private Network.Client m_Client;
 		//---------------------------------
 
 		private bool isDone;
@@ -28,13 +33,18 @@ namespace MainMenu
 		{
 			mImage = Canvas.transform.Find("Background").gameObject;
 			mLogo = Canvas.transform.Find("Logo").gameObject;
-			mPageTitle = Canvas.transform.Find("PageTitle").gameObject;
+			m_PageTitle = Canvas.transform.Find("PageTitle").gameObject;
 			mPowerOffButton = Canvas.transform.Find("PowerButton").gameObject;
+			m_ServerPanel = Canvas.transform.Find("NetworkPanel").Find("Server").gameObject;
+			m_ClientPanel = Canvas.transform.Find("NetworkPanel").Find("Client").gameObject;
+			m_NetworkController = GameObject.Find("NetworkController");
+			m_Server = m_NetworkController.GetComponent<NetworkServer.Server>();
+			m_Client = m_NetworkController.GetComponent<Network.Client>();
 			//GetComponent<CanvasScaler>().referenceResolution = new Vector2(1280, 720);
 
 			mImage.SetActive(true);
 			mLogo.SetActive(false);
-			mPageTitle.SetActive(false);
+			m_PageTitle.SetActive(false);
 			mPowerOffButton.SetActive(false);
 
 			StartCoroutine(StartIntro(3));
@@ -62,7 +72,7 @@ namespace MainMenu
 					{
 						case Constants.NEW_GAME:
 							{
-								mPageTitle.GetComponent<Text>().text = Constants.NEW_GAME;
+								m_PageTitle.GetComponent<Text>().text = Constants.NEW_GAME;
 								int childCount = MenuElements.transform.childCount;
 								GameObject newGame = MenuElements.transform.Find(Constants.NEW_GAME).gameObject;
 
@@ -81,7 +91,7 @@ namespace MainMenu
 							}
 						case Constants.SETTINGS:
 							{
-								mPageTitle.GetComponent<Text>().text = Constants.SETTINGS;
+								m_PageTitle.GetComponent<Text>().text = Constants.SETTINGS;
 								GameObject settings = MenuElements.transform.Find(Constants.SETTINGS).gameObject;
 								StartCoroutine(AnimationSettings(settings));
 								break;
@@ -106,7 +116,25 @@ namespace MainMenu
 							}
 						case Constants.LOCAL_NETWORK:
 							{
+								m_PageTitle.GetComponent<Text>().text = Constants.LOCAL_NETWORK;
+								int childCount = MenuElements.transform.childCount;
+								GameObject lanGame = MenuElements.transform.Find(Constants.AI).gameObject;
 
+								for (int i = 0; i < childCount; ++i)
+								{
+									GameObject child = MenuElements.transform.GetChild(i).gameObject;
+									if (child.name != Constants.AI && child.name != "Background")  //EDIT CHANGE!!!!
+									{
+										Destroy(child);
+									}
+								}
+
+								StartCoroutine(AnimationLan(lanGame));
+								break;
+							}
+						case Constants.SERVER:
+							{
+								m_ServerPanel.SetActive(true);
 								break;
 							}
 						default:
@@ -116,12 +144,17 @@ namespace MainMenu
 			}
 		}
 
+		private GameObject getCanvasObj(string _name)
+		{
+			return Canvas.transform.Find(_name).gameObject;
+		}
+
 		IEnumerator StartIntro(int seconds)
 		{
 			yield return new WaitForSecondsRealtime(seconds);
 			mImage.SetActive(false);
 			mLogo.SetActive(true);
-			mPageTitle.SetActive(true);
+			m_PageTitle.SetActive(true);
 			mPowerOffButton.SetActive(true);
 		}
 
@@ -203,6 +236,45 @@ namespace MainMenu
 
 				yield return new WaitForSecondsRealtime(3);
 				SceneManager.LoadScene("Game");
+
+				isDone = true;
+			}
+
+			yield return null;
+		}
+
+		IEnumerator AnimationLan(GameObject _lanGame)
+		{
+			if (isDone == true)
+			{
+				isDone = false;
+				Material matServer = Resources.Load<Material>("Materials/Menu Materials/ServerIcon");
+				Material matClient = Resources.Load<Material>("Materials/Menu Materials/ClientIcon");
+
+				StartCoroutine(anim.Move(_lanGame, new Vector3(0f, 1f, 0f), 1f));
+				StartCoroutine(anim.Rotation(_lanGame, new Vector3(0f, 0f, 180f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
+
+				// Creates elements of lan game.
+				// Server.
+				GameObject Server = _lanGame;
+				Server.name = Constants.SERVER;
+				Server.transform.Find("Front").GetComponent<MeshRenderer>().material = matServer;
+				Server.transform.Find("Text").GetComponent<TextMesh>().text = Constants.SERVER;
+
+				// Client.
+				GameObject Client = Instantiate(_lanGame, _lanGame.transform.position, _lanGame.transform.rotation, _lanGame.transform.parent);
+				Client.name = Constants.CLIENT;
+				Client.transform.Find("Front").GetComponent<MeshRenderer>().material = matClient;
+				Client.transform.Find("Text").GetComponent<TextMesh>().text = Constants.CLIENT;
+				//-----------------------------
+
+				StartCoroutine(anim.Rotation(Server, new Vector3(0f, 0f, 180f), 0.3f));
+				StartCoroutine(anim.Rotation(Client, new Vector3(0f, 0f, 180f), 0.3f));
+				yield return new WaitWhile(() => anim.mIsRotateDone == false);
+
+				StartCoroutine(anim.Move(Server, new Vector3(-1f, 1f, 0f), 1f));
+				StartCoroutine(anim.Move(Client, new Vector3(1f, 1f, 0f), 1f));
 
 				isDone = true;
 			}
