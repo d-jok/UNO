@@ -1,11 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 
-namespace Network
+public class ClientFunctions : MonoBehaviour
 {
-	public class Client : MonoBehaviour
-	{
-		
-	}
+
 }

@@ -70,7 +70,7 @@ namespace NetworkServer
 			IPEndPoint ipEndPoint = new IPEndPoint(m_IP_Address, m_Port);
 			m_Listener = new Socket(m_IP_Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			m_Listener.Bind(ipEndPoint);
-			m_Listener.Listen(10);
+			m_Listener.Listen(1000);
 			Debug.Log("Sever IP: " + ipEndPoint);
 
 			while (true)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,15 +15,22 @@ namespace Network
 		public GameObject StopServerButton;
 		//public GameObject ServerIP_Text;
 
-		private GameObject m_Server;
-		private NetworkServer.Server m_ServerFunctions;
+		public GameObject ClientInputField;
+
+		private GameObject m_ServerObj;
+		private NetworkServer.Server m_Server;
+		private GameObject m_ClientObj;
+		private NetworkClient.Client m_Client;
 
 		//------------------------------------
 
 		private void Start()
 		{
-			m_Server = GameObject.Find("Server") as GameObject;
-			m_ServerFunctions = m_Server.GetComponent<NetworkServer.Server>();
+			m_ServerObj = GameObject.Find("Server") as GameObject;
+			m_Server = m_ServerObj.GetComponent<NetworkServer.Server>();
+
+			m_ClientObj = GameObject.Find("Client") as GameObject;
+			m_Client = m_ClientObj.GetComponent<NetworkClient.Client>();
 		}
 
 		public void StartSever()
@@ -40,11 +48,11 @@ namespace Network
 
 			StartServerButton.SetActive(false);
 			StopServerButton.SetActive(true);
-			m_ServerFunctions.SetServerName(name);
+			m_Server.SetServerName(name);
 
 			try
 			{
-				m_ServerFunctions.StartServer();
+				m_Server.StartServer();
 			}
 			catch (Exception ex)
 			{
@@ -57,9 +65,34 @@ namespace Network
 
 		public void StopServer()
 		{
-			m_ServerFunctions.StopServer();
+			m_Server.StopServer();
 			StartServerButton.SetActive(true);
 			StopServerButton.SetActive(false);
+		}
+
+		public void ClientConnecting()
+		{
+			GameObject inputFieldText = ClientInputField.transform.Find("Text").gameObject;
+			string inputText = inputFieldText.GetComponent<Text>().text;
+
+			if (inputText == "")
+			{
+				GameObject text = MessagePanel.transform.Find("Text").gameObject;
+				text.GetComponent<Text>().text = "Input server IP!";
+				MessagePanel.SetActive(true);
+				return;
+			}
+
+			try
+			{
+				IPAddress ipAddress = IPAddress.Parse(inputText);
+				m_Client.Connect(ipAddress);
+			}
+			catch (Exception ex)
+			{
+				GameObject text = MessagePanel.transform.Find("Text").gameObject;
+				text.GetComponent<Text>().text = ex.ToString();
+			}
 		}
 	}
 }

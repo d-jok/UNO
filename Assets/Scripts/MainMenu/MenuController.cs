@@ -22,8 +22,8 @@ namespace MainMenu
 		private GameObject m_ServerPanel;
 		private GameObject m_ClientPanel;
 		private GameObject m_NetworkController;
-		private NetworkServer.Server m_Server;
-		private Network.Client m_Client;
+		//private NetworkServer.Server m_Server;
+		//private NetworkClient.Client m_Client;
 		//---------------------------------
 
 		private bool isDone;
@@ -38,8 +38,8 @@ namespace MainMenu
 			m_ServerPanel = Canvas.transform.Find("NetworkPanel").Find("Server").gameObject;
 			m_ClientPanel = Canvas.transform.Find("NetworkPanel").Find("Client").gameObject;
 			m_NetworkController = GameObject.Find("NetworkController");
-			m_Server = m_NetworkController.GetComponent<NetworkServer.Server>();
-			m_Client = m_NetworkController.GetComponent<Network.Client>();
+			//m_Server = m_NetworkController.GetComponent<NetworkServer.Server>();
+			//m_Client = m_NetworkController.GetComponent<NetworkClient.Client>();
 			//GetComponent<CanvasScaler>().referenceResolution = new Vector2(1280, 720);
 
 			mImage.SetActive(true);
@@ -134,7 +134,14 @@ namespace MainMenu
 							}
 						case Constants.SERVER:
 							{
+								m_PageTitle.GetComponent<Text>().text = Constants.LOCAL_NETWORK_SERVER;
 								m_ServerPanel.SetActive(true);
+								break;
+							}
+						case Constants.CLIENT:
+							{
+								m_PageTitle.GetComponent<Text>().text = Constants.LOCAL_NETWORK_CLIENT;
+								m_ClientPanel.SetActive(true);
 								break;
 							}
 						default:
