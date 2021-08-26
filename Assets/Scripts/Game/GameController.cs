@@ -29,6 +29,10 @@ namespace Game
 		private List<GameObject> mPlayersList;
 		private List<GameObject> m_Discard;
 
+		private GameObject m_ServerObj;
+		private NetworkServer.Server m_Server;
+		private NetworkServer.ServerFunctions m_serverFunctions;
+
 //-----------------------------------------------------------------------------
 
 		private void Awake()
@@ -49,6 +53,7 @@ namespace Game
 
 			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 			{
+				Debug.Log("Game type: AI");
 				mNames = new List<string>();
 
 				mNames.Add("Player-1");
@@ -56,9 +61,23 @@ namespace Game
 				mNames.Add("Bot-2");
 				mNames.Add("Bot-3");
 			}
-			else
+			else if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.LOCAL_NETWORK)
 			{
+				Debug.Log("Game type: LOCAL-NETWORK");
 
+				if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.SERVER)
+				{
+					m_ServerObj = GameObject.Find("Server");
+					m_Server = m_ServerObj.GetComponent<NetworkServer.Server>();
+					m_serverFunctions = new NetworkServer.ServerFunctions();
+
+					string command = "#StartGame";
+					m_serverFunctions.SendToAll(command);
+				}
+				else
+				{
+
+				}
 			}
 		}
 
@@ -82,11 +101,27 @@ namespace Game
 				z += 0.01f;
 			}
 
-			SpawnPlayers();
-			StartCoroutine(CardsDistribution());
-			
-			//---------------------------------------------
-			StartCoroutine(SingleGameProcess());
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
+			{
+				SpawnPlayers();
+				StartCoroutine(CardsDistribution());
+				StartCoroutine(SingleGameProcess());
+			}
+			else
+			{
+				int playersCount = m_serverFunctions.GetClientsCount();
+
+				while (playersCount > 0)
+				{
+					foreach (var player in NetworkServer.ServerFunctions.Clients)
+					{
+						if (player.isLoaded)
+						{
+							--playersCount;
+						}
+					}
+				}
+			}
 		}
 
 		void Update()
@@ -120,7 +155,7 @@ namespace Game
 			Instantiate(gameObject, _position, Quaternion.identity);
 		}
 
-		private void GameProcess()
+		private void LanGameProcess()
 		{
 
 		}

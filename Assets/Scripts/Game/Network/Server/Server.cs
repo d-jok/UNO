@@ -5,6 +5,7 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using System;
+using UnityEngine.SceneManagement;
 
 namespace NetworkServer
 {
@@ -15,6 +16,7 @@ namespace NetworkServer
 		private const int m_Port = 9933;
 		private Thread m_SocketThread;
 		private Socket m_Listener;
+		private ServerClients m_serverClients;
 		//private Socket m_Handler;
 
 //-----------------------------------------------------------------------------
@@ -36,6 +38,8 @@ namespace NetworkServer
 
 		public void StartServer()
 		{
+			m_serverClients = new ServerClients();
+
 			Application.runInBackground = true;
 			m_SocketThread = new Thread(networkCode);
 			m_SocketThread.IsBackground = true;
@@ -50,6 +54,24 @@ namespace NetworkServer
 			if (m_SocketThread != null)
 			{
 				m_SocketThread.Abort();
+			}
+		}
+
+		public void StartGame()
+		{
+			DontDestroyOnLoad(this.gameObject);
+			PlayerPrefs.SetString("GameType", MainMenu.Constants.LOCAL_NETWORK);
+			PlayerPrefs.SetString("PlayerRole", MainMenu.Constants.SERVER);
+			SceneManager.LoadScene("Game");
+		}
+
+		public void SendDeck(List<GameObject> _deck)
+		{
+			foreach (var card in _deck)
+			{
+				Game.Card cardProperties = card.GetComponent<Game.Card>();
+				string properties = cardProperties.value.ToString() + " " + cardProperties.color.ToString();
+				m_serverClients.Send(properties);
 			}
 		}
 
@@ -79,6 +101,9 @@ namespace NetworkServer
 				{
 					Socket user = m_Listener.Accept();
 					ServerFunctions.NewClient(user);
+
+					string request = "#GetName";
+					m_serverClients.Send(request);
 				}
 				catch (Exception ex)
 				{

@@ -37,5 +37,25 @@ namespace NetworkServer
 				//Console.WriteLine("Error with endClient: {0}.", exp.Message);
 			}
 		}
+
+		public int GetClientsCount()
+		{
+			return Clients.Count;
+		}
+
+		public void SendToAll(string _command)
+		{
+			try
+			{
+				foreach (var client in Clients)
+				{
+					client.Send(_command);
+				}
+			}
+			catch (Exception)
+			{
+
+			}
+		}
 	}
 }

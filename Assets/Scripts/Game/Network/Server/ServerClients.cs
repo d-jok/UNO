@@ -9,6 +9,9 @@ namespace NetworkServer
 {
 	public class ServerClients
 	{
+		public string Name;
+		public bool isLoaded = false;
+
 		private Socket _handler;
 		private Thread _userThread;
 
@@ -62,7 +65,34 @@ namespace NetworkServer
 
 		private void handleCommand(string data, ServerClients client, byte[] buffer)
 		{
+			string hashtag = data.Split(' ')[0];
 
+			if (hashtag == "#Card")
+			{
+
+			}
+			else if (hashtag == "#Name")
+			{
+				Name = data.Split(' ')[1];
+			}
+			else if (hashtag == "#Loaded")
+			{
+				isLoaded = true;
+			}
+		}
+
+		public void Send(string command)
+		{
+			try
+			{
+				int bytesSent = _handler.Send(Encoding.UTF8.GetBytes(command));
+				//if (bytesSent > 0) Console.WriteLine("Success");
+			}
+			catch (Exception)
+			{
+				//Console.WriteLine("Error with send command: {0}.", exp.Message);
+				ServerFunctions.EndClient(this);
+			}
 		}
 	}
 }

@@ -70,10 +70,17 @@ namespace Network
 			StopServerButton.SetActive(false);
 		}
 
+		public void StartGame()
+		{
+			PlayerPrefs.SetString("PlayerRole", MainMenu.Constants.SERVER);
+			m_Server.StartGame();
+		}
+
 		public void ClientConnecting()
 		{
 			GameObject inputFieldText = ClientInputField.transform.Find("Text").gameObject;
 			string inputText = inputFieldText.GetComponent<Text>().text;
+			PlayerPrefs.SetString("PlayerRole", MainMenu.Constants.CLIENT);
 
 			if (inputText == "")
 			{
