@@ -16,7 +16,8 @@ namespace NetworkServer
 		private const int m_Port = 9933;
 		private Thread m_SocketThread;
 		private Socket m_Listener;
-		private ServerClients m_serverClients;
+		public ServerClients m_serverClients;
+		public ServerFunctions serverFunctions = new ServerFunctions();
 		//private Socket m_Handler;
 
 //-----------------------------------------------------------------------------
@@ -67,12 +68,16 @@ namespace NetworkServer
 
 		public void SendDeck(List<GameObject> _deck)
 		{
+			string cardsNames = "";
+
 			foreach (var card in _deck)
 			{
-				Game.Card cardProperties = card.GetComponent<Game.Card>();
-				string properties = cardProperties.value.ToString() + " " + cardProperties.color.ToString();
-				m_serverClients.Send(properties);
+				//m_serverClients.Send("#Deck " + card.name);
+				cardsNames += card.name + " ";
 			}
+
+			//m_serverClients.Send("#DeckIsSync");
+			serverFunctions.SendToAll("#Deck " + cardsNames);
 		}
 
 		private void networkCode()

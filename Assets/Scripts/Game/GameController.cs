@@ -18,7 +18,8 @@ namespace Game
 		// Private:
 		private int mPlayerNumber;
 		private bool m_TurnOrder;    // if true - clockwise; if false - counterclockwise.
-		private bool mIsAbilityDone;
+		//private bool mIsAbilityDone;
+		private bool m_is_DeckSync;
 		private float mPos_Z;
 		private GameObject mDeck;
 		private AnimationScript mAnim;
@@ -33,6 +34,9 @@ namespace Game
 		private NetworkServer.Server m_Server;
 		private NetworkServer.ServerFunctions m_serverFunctions;
 
+		private GameObject m_ClientObj;
+		private NetworkClient.Client m_Client;
+
 //-----------------------------------------------------------------------------
 
 		private void Awake()
@@ -45,6 +49,7 @@ namespace Game
 			IsCardMoveDone = false;
 			mPlayerNumber = 0;
 			m_TurnOrder = true;
+			m_is_DeckSync = false;
 			mPos_Z = 0;
 			mAnim = new AnimationScript();
 			m_CardsOnField = new List<GameObject>();
@@ -71,55 +76,56 @@ namespace Game
 					m_Server = m_ServerObj.GetComponent<NetworkServer.Server>();
 					m_serverFunctions = new NetworkServer.ServerFunctions();
 
+					CreateDeck();
+					SmashDeck();
+					CreateDeckGameObject();
+
 					string command = "#StartGame";
 					m_serverFunctions.SendToAll(command);
 				}
 				else
 				{
-
+					m_ClientObj = GameObject.Find("Client");
+					m_Client = m_ClientObj.GetComponent<NetworkClient.Client>();
+					m_Client.OnLoadGameScene();
+					// Code here!!
 				}
 			}
 		}
 
 		void Start()
 		{
-			CreateDeck();
-			SmashDeck();
-
-			float z = 0;
-			mCardDeck = new List<GameObject>();
-			mDeck = Instantiate(Player, new Vector3(-5f, 3f, z), Quaternion.identity);
-			mDeck.name = "Deck";
-			mDeck.GetComponent<BoxCollider>().enabled = true;
-			mDeck.GetComponent<PlayerFunctions>().enabled = false;
-
-			foreach (var card in Cards)
-			{
-				GameObject obj = Instantiate(card, new Vector3(-5f, 3f, z), Quaternion.Euler(new Vector3(-90f, -180f, 0f)));
-				obj.transform.SetParent(mDeck.transform);
-				mCardDeck.Add(obj);
-				z += 0.01f;
-			}
-
 			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 			{
+				CreateDeck();
+				SmashDeck();
+				CreateDeckGameObject();
 				SpawnPlayers();
 				StartCoroutine(CardsDistribution());
 				StartCoroutine(SingleGameProcess());
 			}
 			else
 			{
-				int playersCount = m_serverFunctions.GetClientsCount();
-
-				while (playersCount > 0)
+				if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.SERVER)
 				{
-					foreach (var player in NetworkServer.ServerFunctions.Clients)
+					int playersCount = m_serverFunctions.GetClientsCount();
+
+					while (playersCount > 0)
 					{
-						if (player.isLoaded)
+						foreach (var player in NetworkServer.ServerFunctions.Clients)
 						{
-							--playersCount;
+							if (player.isLoaded)
+							{
+								--playersCount;
+							}
 						}
 					}
+
+					StartCoroutine(ServerGameProcess());
+				}
+				else
+				{
+					StartCoroutine(ClientGameProcess());
 				}
 			}
 		}
@@ -155,9 +161,32 @@ namespace Game
 			Instantiate(gameObject, _position, Quaternion.identity);
 		}
 
-		private void LanGameProcess()
+		private IEnumerator ServerGameProcess()
 		{
+			m_Server.SendDeck(Cards);
+			yield return new WaitForSeconds(4);
+			Debug.Log("SYNC");
+			GameObject card = GetCard();
+			StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
 
+			/*while (true)
+			{
+
+			}*/
+		}
+
+		private IEnumerator ClientGameProcess()
+		{
+			yield return new WaitWhile(() => m_is_DeckSync == false);
+			Debug.Log("SYNC");
+			CreateDeckGameObject();
+			GameObject card = GetCard();
+			StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+
+			/*while (true)
+			{
+
+			}*/
 		}
 
 		private IEnumerator SingleGameProcess()
@@ -278,6 +307,46 @@ namespace Game
 			else
 			{
 				// Code here!!!
+			}
+		}
+
+		public void DeckSync(List<string> _cardsNames)
+		{
+			List<GameObject> list = new List<GameObject>();
+
+			foreach (var name in _cardsNames)
+			{
+				foreach (var find in Cards)
+				{
+					if (name == find.name)
+					{
+						list.Add(find);
+					}
+				}
+			}
+
+			Cards = list;
+
+			Debug.Log("CLIENT - DECK IS SYNC");
+			m_Client.send("#DeckIsSync");
+			m_is_DeckSync = true;
+		}
+
+		private void CreateDeckGameObject()
+		{
+			float z = 0;
+			mCardDeck = new List<GameObject>();
+			mDeck = Instantiate(Player, new Vector3(-5f, 3f, z), Quaternion.identity);
+			mDeck.name = "Deck";
+			mDeck.GetComponent<BoxCollider>().enabled = true;
+			mDeck.GetComponent<PlayerFunctions>().enabled = false;
+
+			foreach (var card in Cards)
+			{
+				GameObject obj = Instantiate(card, new Vector3(-5f, 3f, z), Quaternion.Euler(new Vector3(-90f, -180f, 0f)));
+				obj.transform.SetParent(mDeck.transform);
+				mCardDeck.Add(obj);
+				z += 0.01f;
 			}
 		}
 

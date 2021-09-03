@@ -18,7 +18,7 @@ namespace NetworkServer
 				Client newClient = new Client(handle);
 				Clients.Add(newClient);
 			}
-			catch (Exception exp)
+			catch (Exception)
 			{
 				//Console.WriteLine("Error with addNewClient: {0}.", exp.Message);
 			}
@@ -32,7 +32,7 @@ namespace NetworkServer
 				Clients.Remove(client);
 				//Console.WriteLine("User {0} has been disconnected.", client.UserName);
 			}
-			catch (Exception exp)
+			catch (Exception)
 			{
 				//Console.WriteLine("Error with endClient: {0}.", exp.Message);
 			}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using UnityEngine;
 
 namespace NetworkServer
 {
@@ -11,6 +12,7 @@ namespace NetworkServer
 	{
 		public string Name;
 		public bool isLoaded = false;
+		public bool isSync = false;
 
 		private Socket _handler;
 		private Thread _userThread;
@@ -38,7 +40,7 @@ namespace NetworkServer
 				}
 				catch { } // г
 			}
-			catch (Exception exp)
+			catch (Exception)
 			{
 				//Console.WriteLine("Error with end: {0}.", exp.Message);
 			}
@@ -78,6 +80,10 @@ namespace NetworkServer
 			else if (hashtag == "#Loaded")
 			{
 				isLoaded = true;
+			}
+			else if (hashtag == "#DeckIsSync")
+			{
+				isSync = true;
 			}
 		}
 
