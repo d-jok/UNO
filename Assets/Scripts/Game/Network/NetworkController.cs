@@ -12,10 +12,11 @@ namespace Network
 		public GameObject MessagePanel;
 		public GameObject InputField;
 		public GameObject StartServerButton;
-		public GameObject StopServerButton;
+		public GameObject StopServerButton;		
 		//public GameObject ServerIP_Text;
 
 		public GameObject ClientInputField;
+		public GameObject PlayerNameInputField;
 
 		private GameObject m_ServerObj;
 		private NetworkServer.Server m_Server;
@@ -81,6 +82,8 @@ namespace Network
 			GameObject inputFieldText = ClientInputField.transform.Find("Text").gameObject;
 			string inputText = inputFieldText.GetComponent<Text>().text;
 			PlayerPrefs.SetString("PlayerRole", MainMenu.Constants.CLIENT);
+			GameObject PlayerNameInputFieldText = PlayerNameInputField.transform.Find("Text").gameObject;
+			string playerName = PlayerNameInputFieldText.GetComponent<Text>().text;
 
 			if (inputText == "")
 			{
@@ -93,6 +96,7 @@ namespace Network
 			try
 			{
 				IPAddress ipAddress = IPAddress.Parse(inputText);
+				m_Client.Name = playerName;
 				m_Client.Connect(ipAddress);
 			}
 			catch (Exception ex)

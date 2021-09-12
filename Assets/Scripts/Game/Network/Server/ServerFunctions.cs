@@ -17,6 +17,9 @@ namespace NetworkServer
 			{
 				Client newClient = new Client(handle);
 				Clients.Add(newClient);
+
+				int count = Clients.Count;
+				Clients[count - 1].Number = count;
 			}
 			catch (Exception)
 			{

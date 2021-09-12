@@ -13,6 +13,7 @@ namespace NetworkClient
 {
 	public class Client : MonoBehaviour
 	{
+		public int Number;
 		public string Name;
 		public Socket clientSocket;
 		public Thread clientThread;
@@ -20,9 +21,13 @@ namespace NetworkClient
 		private int m_serverPort;
 		private bool m_is_StartGame = false;
 		private bool m_is_DeckSync = false;
+		private bool m_is_playersInfo = false;
+		private bool m_is_SetNumber = false;
 		private List<string> m_cards_names;
 		private GameObject m_gameControllerObj;
 		private Game.GameController m_gameController;
+		private List<string> listInfo = new List<string>();
+		private string receivedCommand = "";
 
 		//-----------------------------------------------------------------------------
 
@@ -47,6 +52,23 @@ namespace NetworkClient
 				m_is_DeckSync = false;
 				m_gameController.DeckSync(m_cards_names);
 			}
+			else if (m_is_playersInfo)
+			{
+				m_is_playersInfo = false;
+				foreach (var item in listInfo)
+				{
+					m_gameController.players_lan.Add(new Game.GameController.PlayerForLan() {
+						m_Name = item.Split('&')[0],
+						m_Number = Int32.Parse(item.Split('&')[1])
+					});
+				}
+
+				m_gameController.SpawnPlayers();
+			}
+			//else if (m_is_SetNumber)
+			//{
+			//	Number = Int32.Parse(receivedCommand);
+			//}
 		}
 
 		public void OnLoadGameScene()
@@ -107,7 +129,7 @@ namespace NetworkClient
 		private void handleCommands(string _data)
 		{
 			int spaceCount = _data.Split(' ').Length - 1;
-			string hashtag;
+			string hashtag = "";
 
 			if (spaceCount != 0)
 			{
@@ -118,7 +140,11 @@ namespace NetworkClient
 				hashtag = _data;
 			}
 
-			if (hashtag == "#GetName")
+			if (hashtag == "#SetNumber")
+			{
+				Number = Int32.Parse(_data.Split(' ')[1]);
+			}
+			else if (hashtag == "#GetName")
 			{
 				send("#Name " + Name);
 			}
@@ -131,6 +157,27 @@ namespace NetworkClient
 				string names = _data.Substring(hashtag.Length);
 				m_cards_names = names.Split(' ').ToList();
 				m_is_DeckSync = true;
+			}
+			else if (hashtag == "#PlayersInfo")
+			{
+				string info = _data.Substring(hashtag.Length + 1);
+				string temp = "";
+
+				for (int i = 0; i < info.Length; ++i)
+				{
+					if (info[i] != ' ')
+					{
+						temp += info[i];
+					}
+					else
+					{
+						listInfo.Add(temp);
+						temp = "";
+					}
+				}
+				
+				//listInfo = info.Split(' ').ToList();
+				m_is_playersInfo = true;
 			}
 		}
 	}

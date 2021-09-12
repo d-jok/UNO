@@ -10,6 +10,7 @@ namespace NetworkServer
 {
 	public class ServerClients
 	{
+		public int Number;
 		public string Name;
 		public bool isLoaded = false;
 		public bool isSync = false;

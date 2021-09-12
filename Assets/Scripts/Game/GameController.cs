@@ -7,6 +7,12 @@ namespace Game
 	public class GameController : MonoBehaviour
 	{
 		// Public:
+		public struct PlayerForLan
+		{
+			public int m_Number;
+			public string m_Name;
+		}
+
 		public bool IsGameStarted;
 		public bool IsGetCardDone;
 		public bool IsCardMoveDone;
@@ -14,12 +20,15 @@ namespace Game
 		public GameObject Bot;
 		public GameObject Player;
 		public GameObject m_TurnOrderArrows;
+		public List<PlayerForLan> players_lan;
 
 		// Private:
 		private int mPlayerNumber;
 		private bool m_TurnOrder;    // if true - clockwise; if false - counterclockwise.
 		//private bool mIsAbilityDone;
 		private bool m_is_DeckSync;
+		[HideInInspector]
+		public  bool m_is_PlayersSync;
 		private float mPos_Z;
 		private GameObject mDeck;
 		private AnimationScript mAnim;
@@ -50,11 +59,13 @@ namespace Game
 			mPlayerNumber = 0;
 			m_TurnOrder = true;
 			m_is_DeckSync = false;
+			m_is_PlayersSync = false;
 			mPos_Z = 0;
 			mAnim = new AnimationScript();
 			m_CardsOnField = new List<GameObject>();
 			mPlayersList = new List<GameObject>();
 			m_Discard = new List<GameObject>();
+			players_lan = new List<PlayerForLan>();
 
 			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 			{
@@ -116,15 +127,25 @@ namespace Game
 						{
 							if (player.isLoaded)
 							{
+								player.Send("#SetNumber " + player.Number);	// Send player Number.
 								--playersCount;
 							}
 						}
 					}
 
+
+
 					StartCoroutine(ServerGameProcess());
 				}
 				else
 				{
+					mNames = new List<string>();
+
+					foreach (var player in players_lan)
+					{
+						mNames.Add(player.m_Name);
+					}
+
 					StartCoroutine(ClientGameProcess());
 				}
 			}
@@ -166,8 +187,29 @@ namespace Game
 			m_Server.SendDeck(Cards);
 			yield return new WaitForSeconds(4);
 			Debug.Log("SYNC");
-			GameObject card = GetCard();
-			StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+
+			// CHANGE
+			string playersInfo = "#PlayersInfo ";
+			mNames = new List<string>();
+			int number = 0;
+			playersInfo += m_Server.GetServerName() + "&" + number + " ";
+			number = 1;
+			foreach (var player in NetworkServer.ServerFunctions.Clients)
+			{
+				//player.Number = number;
+				mNames.Add(player.Name);
+				playersInfo += player.Name + "&" + player.Number + " ";
+				++number;
+			}
+			// CHANGE
+
+			SpawnPlayers();
+			m_serverFunctions.SendToAll(playersInfo);
+
+
+			//GameObject card = GetCard();
+			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+			m_TurnOrderArrows.SetActive(true);
 
 			/*while (true)
 			{
@@ -179,9 +221,13 @@ namespace Game
 		{
 			yield return new WaitWhile(() => m_is_DeckSync == false);
 			Debug.Log("SYNC");
+			yield return new WaitWhile(() => m_is_PlayersSync == false);
+			Debug.Log("PLayers SYNC");
 			CreateDeckGameObject();
-			GameObject card = GetCard();
-			StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+			//GameObject card = GetCard();
+			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+			//SpawnPlayers();
+			m_TurnOrderArrows.SetActive(true);
 
 			/*while (true)
 			{
@@ -267,9 +313,15 @@ namespace Game
 
 		}
 
-		private void SpawnPlayers()
+		public void SpawnPlayers()
 		{
 			int count = mNames.Count;
+
+			if (count == 0)
+			{
+				count = players_lan.Count;
+			}
+
 			float angleStep = (360 / count) * (Mathf.PI / 180);     // Convert to radians.
 			float angle = Constants.START_SPAWN_ANGLE * (Mathf.PI / 180);   // Convert to radians.
 
@@ -306,7 +358,44 @@ namespace Game
 			}
 			else
 			{
-				// Code here!!!
+				PlayerForLan playerForLanTemp = new PlayerForLan();
+				List<PlayerForLan> list = new List<PlayerForLan>();
+
+				foreach (var item in players_lan)
+				{
+					if (item.m_Number != m_Client.Number)
+					{
+						list.Add(item);
+					}
+					else
+					{
+						playerForLanTemp = item;
+					}
+				}
+
+				players_lan.Clear();
+				players_lan.Add(playerForLanTemp);
+
+				foreach (var item in list)
+				{
+					players_lan.Add(item);
+				}
+
+				// PROBLEM with player_lan!
+				for (int i = 0; i < players_lan.Count; ++i)
+				{
+					float x = Constants.RADIUS * Mathf.Cos(angle);
+					float y = Constants.RADIUS * Mathf.Sin(angle);
+
+					mPlayersList.Add(Instantiate(Player, new Vector3(x, y, 0f), Quaternion.identity, Player.transform.parent));
+					mPlayersList[i].name = players_lan[i].m_Name;
+					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.playerName = players_lan[i].m_Name;
+					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.spawnPoint = new Vector3(x, y, 0f);
+
+					angle += angleStep;
+				}
+
+				m_is_PlayersSync = true;
 			}
 		}
 
@@ -407,56 +496,44 @@ namespace Game
 
 			GameObject card;
 
-			for (int i = 0; i < Constants.CARD_COUNT_IN_DISTRIBUTION; ++i)
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 			{
-				for (int j = 0; j < mPlayersList.Count; ++j)
+				for (int i = 0; i < Constants.CARD_COUNT_IN_DISTRIBUTION; ++i)
 				{
-					card = GetCard();
-
-					//if (j == 0)
-					//{
-					//	StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
-					//}
-
-					if (mPlayersList[j].name.Contains("Player"))
+					for (int j = 0; j < mPlayersList.Count; ++j)
 					{
-						PlayerFunctions playerFunc = mPlayersList[j].GetComponent<PlayerFunctions>();
-						yield return StartCoroutine(playerFunc.AddCard(card));
-					}
-					else
-					{
-						BotFunctions botFunc = mPlayersList[j].GetComponent<BotFunctions>();
-						Vector3 spawnPoint = botFunc.Bot.spawnPoint;
-						StartCoroutine(mAnim.Move(card, spawnPoint, 1f));
-						yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
-						yield return StartCoroutine(botFunc.AddCard(card));
+						card = GetCard();
+
+						//if (j == 0)
+						//{
+						//	StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+						//}
+
+						if (mPlayersList[j].name.Contains("Player"))
+						{
+							PlayerFunctions playerFunc = mPlayersList[j].GetComponent<PlayerFunctions>();
+							yield return StartCoroutine(playerFunc.AddCard(card));
+						}
+						else
+						{
+							BotFunctions botFunc = mPlayersList[j].GetComponent<BotFunctions>();
+							Vector3 spawnPoint = botFunc.Bot.spawnPoint;
+							StartCoroutine(mAnim.Move(card, spawnPoint, 1f));
+							yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
+							yield return StartCoroutine(botFunc.AddCard(card));
+						}
 					}
 				}
-
-
-				
-
-				/*for (int j = 0; j < mPlayers.Count; ++j)
+			}
+			else
+			{
+				for (int i = 0; i < Constants.CARD_COUNT_IN_DISTRIBUTION; ++i)
 				{
-					card = GetCard();
-
-					if (j == 0)
+					for (int j = 0; j < mPlayersList.Count; ++j)
 					{
-						StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
+						// CODE HERE!!!
 					}
-
-					//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, -30f), 0.3f));
-					/*Vector3 v = new Vector3(mPlayers[j].spawnPoint.x + d * Mathf.Cos(angle),
-						mPlayers[j].spawnPoint.y + d * Mathf.Sin(angle),
-						mPlayers[j].spawnPoint.z + d * Mathf.Sin(angle));
-
-					d += 0.2f;
-
-					StartCoroutine(mAnim.Move(card, mPlayers[j].spawnPoint, 1f));
-					yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
-
-					mPlayers[j].cardsInHand.Add(card);
-				}*/
+				}
 			}
 
 			card = GetCard();

@@ -18,6 +18,7 @@ namespace NetworkServer
 		private Socket m_Listener;
 		public ServerClients m_serverClients;
 		public ServerFunctions serverFunctions = new ServerFunctions();
+		public int Number;
 		//private Socket m_Handler;
 
 //-----------------------------------------------------------------------------
@@ -106,6 +107,9 @@ namespace NetworkServer
 				{
 					Socket user = m_Listener.Accept();
 					ServerFunctions.NewClient(user);
+
+					int number = NetworkServer.ServerFunctions.Clients.Count;
+					m_serverClients = NetworkServer.ServerFunctions.Clients[number - 1];
 
 					string request = "#GetName";
 					m_serverClients.Send(request);
