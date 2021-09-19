@@ -15,6 +15,7 @@ namespace Game
 		private int OldCardCount;
 		private float mIndent;
 		private string m_choosedObjectName;
+		private string m_gameType;
 		private AnimationScript mAnim;
 		private GameObject m_GameProcess;
 		private GameObject m_Card;
@@ -31,6 +32,7 @@ namespace Game
 			OldCardCount = 0;
 			mIndent = 1.12f;
 			m_choosedObjectName = "";
+			m_gameType = PlayerPrefs.GetString("GameType");
 			mAnim = new AnimationScript();
 			m_GameProcess = GameObject.Find("GameController");
 			m_Card = null;

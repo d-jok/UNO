@@ -8,6 +8,7 @@ namespace Game
 	public class Player
 	{
 		public string playerName;
+		public int playerNumber;
 		public Vector3 spawnPoint;
 		public List<GameObject> cardsInHand;
 

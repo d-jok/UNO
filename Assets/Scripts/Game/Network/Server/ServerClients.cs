@@ -14,6 +14,7 @@ namespace NetworkServer
 		public string Name;
 		public bool isLoaded = false;
 		public bool isSync = false;
+		public bool isCardsDisributed = false;
 
 		private Socket _handler;
 		private Thread _userThread;
@@ -85,6 +86,10 @@ namespace NetworkServer
 			else if (hashtag == "#DeckIsSync")
 			{
 				isSync = true;
+			}
+			else if (hashtag == "#CardsWasDistributed")
+			{
+				isCardsDisributed = true;
 			}
 		}
 

@@ -188,24 +188,44 @@ namespace Game
 			yield return new WaitForSeconds(4);
 			Debug.Log("SYNC");
 
-			// CHANGE
 			string playersInfo = "#PlayersInfo ";
 			mNames = new List<string>();
+			mNames.Add(m_Server.GetServerName());
 			int number = 0;
+			players_lan.Add(new PlayerForLan() {
+				m_Name = m_Server.GetServerName(),
+				m_Number = number
+			});
 			playersInfo += m_Server.GetServerName() + "&" + number + " ";
 			number = 1;
 			foreach (var player in NetworkServer.ServerFunctions.Clients)
 			{
 				//player.Number = number;
+				players_lan.Add(new PlayerForLan() {
+					m_Name = player.Name,
+					m_Number = player.Number
+				});
+
 				mNames.Add(player.Name);
 				playersInfo += player.Name + "&" + player.Number + " ";
 				++number;
 			}
-			// CHANGE
 
 			SpawnPlayers();
 			m_serverFunctions.SendToAll(playersInfo);
+			yield return StartCoroutine(CardsDistribution());
 
+			int playersCount = m_serverFunctions.GetClientsCount();
+			while (playersCount > 0)
+			{
+				foreach (var player in NetworkServer.ServerFunctions.Clients)
+				{
+					if (player.isCardsDisributed)
+					{
+						--playersCount;
+					}
+				}
+			}
 
 			//GameObject card = GetCard();
 			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
@@ -227,6 +247,8 @@ namespace Game
 			//GameObject card = GetCard();
 			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
 			//SpawnPlayers();
+			yield return StartCoroutine(CardsDistribution());
+			m_Client.send("#DistributionIsDone");
 			m_TurnOrderArrows.SetActive(true);
 
 			/*while (true)
@@ -297,6 +319,7 @@ namespace Game
 			}
 		}
 
+		// ChANGE
 		private int GetPrevPlayerNumber()
 		{
 			int num = mPlayerNumber;
@@ -363,33 +386,55 @@ namespace Game
 
 				foreach (var item in players_lan)
 				{
-					if (item.m_Number != m_Client.Number)
+					if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.SERVER)
 					{
-						list.Add(item);
+						if (item.m_Number != 0)
+						{
+							list.Add(item);
+						}
+						else
+						{
+							playerForLanTemp = item;
+						}
 					}
 					else
 					{
-						playerForLanTemp = item;
+						if (item.m_Number != m_Client.Number)
+						{
+							list.Add(item);
+						}
+						else
+						{
+							playerForLanTemp = item;
+						}
 					}
 				}
 
-				players_lan.Clear();
-				players_lan.Add(playerForLanTemp);
+				//players_lan.Clear();
+				//players_lan.Add(playerForLanTemp);
 
+				//foreach (var item in list)
+				//{
+				//	players_lan.Add(item);
+				//}
+
+				List<PlayerForLan> SpawnList = new List<PlayerForLan>();
+				SpawnList.Add(playerForLanTemp);
 				foreach (var item in list)
 				{
-					players_lan.Add(item);
+					SpawnList.Add(item);
 				}
 
 				// PROBLEM with player_lan!
-				for (int i = 0; i < players_lan.Count; ++i)
+				for (int i = 0; i < SpawnList.Count; ++i)
 				{
 					float x = Constants.RADIUS * Mathf.Cos(angle);
 					float y = Constants.RADIUS * Mathf.Sin(angle);
 
 					mPlayersList.Add(Instantiate(Player, new Vector3(x, y, 0f), Quaternion.identity, Player.transform.parent));
-					mPlayersList[i].name = players_lan[i].m_Name;
-					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.playerName = players_lan[i].m_Name;
+					mPlayersList[i].name = SpawnList[i].m_Name;
+					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.playerName = SpawnList[i].m_Name;
+					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.playerNumber = SpawnList[i].m_Number;
 					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.spawnPoint = new Vector3(x, y, 0f);
 
 					angle += angleStep;
@@ -527,11 +572,31 @@ namespace Game
 			}
 			else
 			{
-				for (int i = 0; i < Constants.CARD_COUNT_IN_DISTRIBUTION; ++i)
+
+				// ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+				int cardCount = Constants.CARD_COUNT_IN_DISTRIBUTION * mPlayersList.Count;
+
+				for (int i = 0, k = 0; i < cardCount; ++i)
 				{
+					card = GetCard();
+
 					for (int j = 0; j < mPlayersList.Count; ++j)
 					{
-						// CODE HERE!!!
+						PlayerFunctions playerFunc = mPlayersList[j].GetComponent<PlayerFunctions>();
+
+						if (playerFunc.mPlayer.playerNumber == players_lan[k].m_Number)
+						{
+							yield return StartCoroutine(playerFunc.AddCard(card));
+							++k;
+
+							if (k == players_lan.Count)
+							{
+								k = 0;
+							}
+
+							break;
+						}
 					}
 				}
 			}
@@ -540,6 +605,11 @@ namespace Game
 			StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
 			StartCoroutine(mAnim.Move(card, new Vector3(0, 0, 0), 1f));
 			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
+
+			if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.CLIENT)
+			{
+				m_Client.send("#CardsWasDistributed");
+			}
 
 			m_CardsOnField.Add(card);
 			IsGameStarted = true;
