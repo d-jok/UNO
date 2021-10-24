@@ -78,7 +78,7 @@ namespace NetworkServer
 			}
 
 			//m_serverClients.Send("#DeckIsSync");
-			serverFunctions.SendToAll("#Deck " + cardsNames);
+			serverFunctions.SendToAll("#DeckAtStart " + cardsNames);
 		}
 
 		private void networkCode()

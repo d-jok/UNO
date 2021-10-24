@@ -10,12 +10,20 @@ namespace NetworkServer
 {
 	public class ServerClients
 	{
+		// Public:
 		public int Number;
 		public string Name;
 		public bool isLoaded = false;
 		public bool isSync = false;
 		public bool isCardsDisributed = false;
+		public bool isTurnDone = false;
 
+		// Card or other.
+		public string Action = "";
+		public string cardName = "";
+		public string cardColor = "";
+
+		// Private:
 		private Socket _handler;
 		private Thread _userThread;
 
@@ -71,11 +79,7 @@ namespace NetworkServer
 		{
 			string hashtag = data.Split(' ')[0];
 
-			if (hashtag == "#Card")
-			{
-
-			}
-			else if (hashtag == "#Name")
+			if (hashtag == "#Name")
 			{
 				Name = data.Split(' ')[1];
 			}
@@ -90,6 +94,28 @@ namespace NetworkServer
 			else if (hashtag == "#CardsWasDistributed")
 			{
 				isCardsDisributed = true;
+			}
+			else if (hashtag == "#TurnIsDone")
+			{
+				isTurnDone = true;
+			}
+			else if (hashtag == "#Card")
+			{
+				if (data.Contains("Color"))
+				{
+					Action = "Card";
+					cardName = data.Split(' ')[1];
+					cardColor = data.Split(' ')[2];
+				}
+				else
+				{
+					Action = "Card";
+					cardName = data.Split(' ')[1];
+				}
+			}
+			else if (hashtag == "#Deck")
+			{
+				Action = "Deck";
 			}
 		}
 

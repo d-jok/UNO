@@ -16,11 +16,14 @@ namespace Game
 		public bool IsGameStarted;
 		public bool IsGetCardDone;
 		public bool IsCardMoveDone;
+		public bool IsPlayerTurn_Lan;
+		public bool IsPlayerTurnDone_Lan;
 		public List<GameObject> Cards;
 		public GameObject Bot;
 		public GameObject Player;
 		public GameObject m_TurnOrderArrows;
 		public List<PlayerForLan> players_lan;
+		public List<PlayerForLan> players_lan_updated;
 
 		// Private:
 		private int mPlayerNumber;
@@ -45,8 +48,20 @@ namespace Game
 
 		private GameObject m_ClientObj;
 		private NetworkClient.Client m_Client;
+		private GameObject m_CurrentPlayer;
+		private PlayerFunctions m_CurrentPlayerFunctions;
 
 //-----------------------------------------------------------------------------
+
+		public List<GameObject> getPlayersList()
+		{
+			return mPlayersList;
+		}
+
+		public bool getTurnOrder()
+		{
+			return m_TurnOrder;
+		}
 
 		private void Awake()
 		{
@@ -56,6 +71,7 @@ namespace Game
 			IsGameStarted = false;
 			IsGetCardDone = false;
 			IsCardMoveDone = false;
+			IsPlayerTurnDone_Lan = false;
 			mPlayerNumber = 0;
 			m_TurnOrder = true;
 			m_is_DeckSync = false;
@@ -146,6 +162,7 @@ namespace Game
 						mNames.Add(player.m_Name);
 					}
 
+
 					StartCoroutine(ClientGameProcess());
 				}
 			}
@@ -154,26 +171,26 @@ namespace Game
 		void Update()
 		{
 			// Сhecks if the player still has cards.
-			if (IsGameStarted)
-			{
-				foreach (var player in mPlayersList)	// THERE ERRORS!!!
-				{
-					if (player.name.Contains("Player"))
-					{
-						if (player.GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count == 0)
-						{
-							Debug.Log(player.name + " WIN!!!"); //EDIT!!!
-						}
-					}
-					else
-					{
-						if (player.GetComponent<BotFunctions>().Bot.cardsInHand.Count == 0)
-						{
-							Debug.Log(player.name + " WIN!!!"); //EDIT!!!
-						}
-					}
-				}
-			}
+			//if (IsGameStarted)
+			//{
+			//	foreach (var player in mPlayersList)	// THERE ERRORS!!!
+			//	{
+			//		if (player.name.Contains("Player"))
+			//		{
+			//			if (player.GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count == 0)
+			//			{
+			//				Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+			//			}
+			//		}
+			//		else
+			//		{
+			//			if (player.GetComponent<BotFunctions>().Bot.cardsInHand.Count == 0)
+			//			{
+			//				Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+			//			}
+			//		}
+			//	}
+			//}
 		}
 
 		private void SpawnGameObject(string _path, Vector3 _position)
@@ -213,6 +230,12 @@ namespace Game
 
 			SpawnPlayers();
 			m_serverFunctions.SendToAll(playersInfo);
+
+			// Current player initialization.
+			m_CurrentPlayer = GameObject.Find(m_Server.GetServerName());
+			m_CurrentPlayerFunctions = m_CurrentPlayer.GetComponent<PlayerFunctions>();
+			m_CurrentPlayerFunctions.SetServer_Lan(m_serverFunctions);
+
 			yield return StartCoroutine(CardsDistribution());
 
 			int playersCount = m_serverFunctions.GetClientsCount();
@@ -231,10 +254,123 @@ namespace Game
 			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
 			m_TurnOrderArrows.SetActive(true);
 
-			/*while (true)
+			while (true)
 			{
+				Debug.Log(mPlayerNumber);
 
-			}*/
+				if (mCardDeck.Count == 0)
+				{
+					yield return StartCoroutine(RestoreDeck());
+					//CODE HERE
+				}
+
+				NetworkServer.ServerClients CurrentPlayer = new NetworkServer.ServerClients();
+
+				if (mPlayerNumber != 0)
+				{
+					// PLAYER TURN SEND. CODE
+					foreach (var player in NetworkServer.ServerFunctions.Clients)
+					{
+						if (player.Number == mPlayerNumber)
+						{
+							CurrentPlayer = player;
+							player.Send("#YourTurn");
+							break;
+						}
+					}
+
+					yield return new WaitWhile(() => CurrentPlayer.isTurnDone == false);
+					CurrentPlayer.isTurnDone = false;
+
+					Debug.Log(CurrentPlayer.Action); // DELETE.
+
+					switch (CurrentPlayer.Action)
+					{
+						case "Card":
+							{
+								string request = "#Card ";
+								GameObject player = mPlayersList[mPlayerNumber];
+								PlayerFunctions func = player.GetComponent<PlayerFunctions>();
+								GameObject selectedCard = new GameObject();
+								int Counter = 0;
+								foreach (var card in func.mPlayer.cardsInHand)
+								{
+									string name = card.name.Split('(')[0];
+									if (name == CurrentPlayer.cardName)
+									{
+										selectedCard = card;
+										func.mPlayer.cardsInHand.RemoveAt(Counter);
+										request += CurrentPlayer.cardName + " ";
+										CurrentPlayer.cardName = "";
+										break;
+									}
+									++Counter;
+								}
+
+								if (CurrentPlayer.cardColor != "")
+								{
+									Choose_Color changeColor = selectedCard.GetComponent<Choose_Color>();
+									Color cardColor;
+									System.Enum.TryParse(CurrentPlayer.cardColor, out cardColor);
+									changeColor.ChangeColor(cardColor);
+									request += CurrentPlayer.cardColor;
+									CurrentPlayer.cardColor = "";
+								}
+
+								yield return StartCoroutine(func.CardsPositioning());
+								yield return StartCoroutine(MoveCardOnField(selectedCard, "Player")); // Change on Bot. 
+																									// Becase animation must rotate the card.
+
+								//SEND TO ALL EXCEPT the current player.
+								foreach (var playerInList in NetworkServer.ServerFunctions.Clients)
+								{
+									if (playerInList.Number != CurrentPlayer.Number)
+									{
+										playerInList.Send(request + " " + CurrentPlayer.Number);
+									}
+								}
+
+								break;
+							}
+						case "Deck":
+							{
+								//SEND TO ALL EXCEPT the current player.
+								foreach (var playerInList in NetworkServer.ServerFunctions.Clients)
+								{
+									if (playerInList.Number != CurrentPlayer.Number)
+									{
+										playerInList.Send("#Deck " + CurrentPlayer.Number);
+									}
+								}
+
+								GameObject card = GetCard();
+								GameObject player = mPlayersList[mPlayerNumber];
+								PlayerFunctions func = player.GetComponent<PlayerFunctions>();
+								yield return StartCoroutine(func.AddCard(card));
+								break;
+							}
+						default:
+							break;
+					}
+
+					CurrentPlayer.Action = "";
+				}
+				else if (mPlayerNumber == 0)
+				{
+					yield return StartCoroutine(m_CurrentPlayerFunctions.YourTurn());
+				}
+
+				if (m_TurnOrder == true)
+				{
+					NextPlayerNumber();
+				}
+				else
+				{
+					PrevPlayerNumber();
+				}
+
+				Debug.Log("*****************************"); //Delete
+			}
 		}
 
 		private IEnumerator ClientGameProcess()
@@ -243,6 +379,12 @@ namespace Game
 			Debug.Log("SYNC");
 			yield return new WaitWhile(() => m_is_PlayersSync == false);
 			Debug.Log("PLayers SYNC");
+
+			// Current player initialization.
+			m_CurrentPlayer = GameObject.Find(m_Client.Name);
+			m_CurrentPlayerFunctions = m_CurrentPlayer.GetComponent<PlayerFunctions>();
+			m_CurrentPlayerFunctions.SetClient_Lan(m_Client);	// Set client in player functions.
+
 			CreateDeckGameObject();
 			//GameObject card = GetCard();
 			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
@@ -251,10 +393,23 @@ namespace Game
 			m_Client.send("#DistributionIsDone");
 			m_TurnOrderArrows.SetActive(true);
 
-			/*while (true)
+			while (true)
 			{
+				Debug.Log(mPlayerNumber);
+				yield return new WaitWhile(() => IsPlayerTurn_Lan == false);
+				yield return StartCoroutine(m_CurrentPlayerFunctions.YourTurn());
+				IsPlayerTurn_Lan = false;
+				m_Client.send("#TurnIsDone");
 
-			}*/
+				if (m_TurnOrder == true)
+				{
+					NextPlayerNumber();
+				}
+				else
+				{
+					PrevPlayerNumber();
+				}
+			}
 		}
 
 		private IEnumerator SingleGameProcess()
@@ -293,42 +448,88 @@ namespace Game
 			}
 		}
 
-		private void NextPlayerNumber()
+		public void NextPlayerNumber()
 		{
 			++mPlayerNumber;
 
-			if (mPlayerNumber == 4)
+			if (mNames.Count - 1 > 0 && mPlayerNumber >= mNames.Count)
+			{
+				mPlayerNumber = 0;
+			}
+			else if (mPlayerNumber >= players_lan_updated.Count)
 			{
 				mPlayerNumber = 0;
 			}
 		}
 
-		private int GetNextPlayerNumber()
+		public int GetNextPlayerNumber()
 		{
-			int num = mPlayerNumber;
-			return num + 1 == 4 ? mPlayerNumber = 0 : ++num;
+			int number = mPlayerNumber;
+			int playerCount = 0;
+			
+			if (mNames.Count - 1 > 0)
+			{
+				playerCount = mNames.Count;
+			}
+			else
+			{
+				playerCount = players_lan_updated.Count;
+			}
+
+			if (number + 1 >= playerCount)
+			{
+				return 0;
+			}
+			else
+			{
+				return number + 1;
+			}
 		}
 
-		private void PrevPlayerNumber()
+		public void PrevPlayerNumber()
 		{
 			--mPlayerNumber;
 
 			if (mPlayerNumber < 0)
 			{
-				mPlayerNumber = 3;
+				if (mNames.Count - 1 > 0)
+				{
+					mPlayerNumber = mNames.Count - 1;
+				}
+				else
+				{
+					mPlayerNumber = players_lan_updated.Count - 1;
+				}
 			}
 		}
 
-		// ChANGE
-		private int GetPrevPlayerNumber()
+		public int GetPrevPlayerNumber()
 		{
-			int num = mPlayerNumber;
-			return num - 1 <= 0 ? mPlayerNumber = 3 : --num;
+			int number = mPlayerNumber;
+			int playerNumber = 0;
+
+			if (mNames.Count - 1 > 0)
+			{
+				playerNumber = mNames.Count;
+			}
+			else
+			{
+				playerNumber = players_lan_updated.Count;
+			}
+
+			if (number - 1 < 0)
+			{
+				return playerNumber - 1;
+			}
+			else
+			{
+				return number - 1;
+			}
 		}
 
-		private void NetWorkGameProcess()
+		public int GetCurrentPlayerNumber()
 		{
-			//Code here!!!
+			return mPlayerNumber;
 		}
 
 		private void AddPlayer()
@@ -438,6 +639,17 @@ namespace Game
 					mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.spawnPoint = new Vector3(x, y, 0f);
 
 					angle += angleStep;
+				}
+
+				players_lan_updated = SpawnList;
+
+				for (int i = 0; i < SpawnList.Count; ++i)
+				{
+					if (SpawnList[i].m_Number == 0)
+					{
+						mPlayerNumber = i;
+						break;
+					}
 				}
 
 				m_is_PlayersSync = true;
@@ -572,9 +784,6 @@ namespace Game
 			}
 			else
 			{
-
-				// ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 				int cardCount = Constants.CARD_COUNT_IN_DISTRIBUTION * mPlayersList.Count;
 
 				for (int i = 0, k = 0; i < cardCount; ++i)
@@ -606,7 +815,8 @@ namespace Game
 			StartCoroutine(mAnim.Move(card, new Vector3(0, 0, 0), 1f));
 			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
 
-			if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.CLIENT)
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.LOCAL_NETWORK &&
+				PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.CLIENT)
 			{
 				m_Client.send("#CardsWasDistributed");
 			}
@@ -690,7 +900,8 @@ namespace Game
 
 		public IEnumerator AnimationMoveCardOnField(GameObject card, string playerType)	//EDIT!!!
 		{
-			int number = Random.Range(0, 1);
+			//int number = Random.Range(0, 1);
+			int number = 0;
 			int angle = Random.Range(-10, 10);
 
 			switch (number)
@@ -703,7 +914,7 @@ namespace Game
 						}
 						StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 180f + angle, 0f), 0.3f));
 						//StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z -= 0.1f), 0.5f));
-						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z), 0.5f));
+						StartCoroutine(mAnim.Move(card, new Vector3(0f, 0f, mPos_Z), 1f));
 						break;
 					}
 				case 1:	//EDIT!!
@@ -728,7 +939,7 @@ namespace Game
 			yield return StartCoroutine(mAnim.Move(card, deck_Pos, 1f));
 		}
 
-		private IEnumerator CardsAbilities()
+		public IEnumerator CardsAbilities()
 		{
 			switch (m_CardsOnField[m_CardsOnField.Count - 1].GetComponent<Card>().value)
 			{
@@ -762,25 +973,48 @@ namespace Game
 							playerNumber = GetPrevPlayerNumber();
 						}
 
-						if (playerNumber != 0)
+						if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 						{
-							BotFunctions bFunc = mPlayersList[playerNumber].GetComponent<BotFunctions>();
-
-							for (int i = 0; i < 2; ++i)
+							if (playerNumber != 0)
 							{
-								GameObject card = GetCard();
-								yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
-								yield return StartCoroutine(bFunc.AddCard(card));
+								BotFunctions bFunc = mPlayersList[playerNumber].GetComponent<BotFunctions>();
+
+								for (int i = 0; i < 2; ++i)
+								{
+									GameObject card = GetCard();
+									yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
+									yield return StartCoroutine(bFunc.AddCard(card));
+								}
+							}
+							else
+							{
+								PlayerFunctions pFunc = mPlayersList[playerNumber].GetComponent<PlayerFunctions>();
+
+								for (int i = 0; i < 2; ++i)
+								{
+									GameObject card = GetCard();
+									yield return StartCoroutine(pFunc.AddCard(card));
+								}
 							}
 						}
-						else
+						else   // LOCAL NETWORK.
 						{
+							Debug.Log("CardAbility(Plus 2) player number:" + playerNumber);
 							PlayerFunctions pFunc = mPlayersList[playerNumber].GetComponent<PlayerFunctions>();
 
 							for (int i = 0; i < 2; ++i)
 							{
 								GameObject card = GetCard();
 								yield return StartCoroutine(pFunc.AddCard(card));
+							}
+
+							if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.SERVER)
+							{
+
+							}
+							else
+							{
+
 							}
 						}
 						break;
@@ -817,26 +1051,40 @@ namespace Game
 							playerNumber = GetPrevPlayerNumber();
 						}
 
-						if (playerNumber != 0)
+						if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
 						{
-							BotFunctions bFunc = mPlayersList[playerNumber].GetComponent<BotFunctions>();
-							for (int i = 0; i < 4; ++i)
+							if (playerNumber != 0)
 							{
-								GameObject card = GetCard();
-								yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
-								yield return StartCoroutine(bFunc.AddCard(card));
+								BotFunctions bFunc = mPlayersList[playerNumber].GetComponent<BotFunctions>();
+								for (int i = 0; i < 4; ++i)
+								{
+									GameObject card = GetCard();
+									yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
+									yield return StartCoroutine(bFunc.AddCard(card));
+								}
+								NextPlayerNumber();
 							}
-							NextPlayerNumber();
+							else
+							{
+								PlayerFunctions pFunc = mPlayersList[playerNumber].GetComponent<PlayerFunctions>();
+								for (int i = 0; i < 4; ++i)
+								{
+									GameObject card = GetCard();
+									yield return StartCoroutine(pFunc.AddCard(card));
+								}
+								NextPlayerNumber();
+							}
 						}
-						else
+						else    // LOCAL NETWORK
 						{
+							Debug.Log("CardAbility player number:" + playerNumber);
 							PlayerFunctions pFunc = mPlayersList[playerNumber].GetComponent<PlayerFunctions>();
 							for (int i = 0; i < 4; ++i)
 							{
 								GameObject card = GetCard();
 								yield return StartCoroutine(pFunc.AddCard(card));
 							}
-							NextPlayerNumber();
+							//NextPlayerNumber();
 						}
 						break;
 					}

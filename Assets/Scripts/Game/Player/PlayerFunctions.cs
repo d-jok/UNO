@@ -22,6 +22,8 @@ namespace Game
 		private GameObject m_colorPanel;
 		private GameObject m_UnoButton;
 		private GameObject m_Uno_PopUp;
+		private NetworkClient.Client m_Client;
+		private NetworkServer.ServerFunctions m_serverFunctions;
 
 		private void Awake()
 		{
@@ -45,6 +47,16 @@ namespace Game
 			m_Uno_PopUp = GameObject.Find("Uno_PopUp(Clone)");
 		}
 
+		public void SetServer_Lan(NetworkServer.ServerFunctions _server)
+		{
+			m_serverFunctions = _server;
+		}
+
+		public void SetClient_Lan(NetworkClient.Client _client)
+		{
+			m_Client = _client;
+		}
+
 		public IEnumerator AddCard(GameObject _card)
 		{
 			yield return StartCoroutine(AnimationAddingCard(_card));
@@ -56,7 +68,7 @@ namespace Game
 		{
 			Vector3 cardPos = _card.transform.position;
 			cardPos.z -= 0.5f;
-			StartCoroutine(mAnim.Move(_card, cardPos, 0.3f));
+			yield return StartCoroutine(mAnim.Move(_card, cardPos, 1f));
 			yield return StartCoroutine(mAnim.Rotation(_card, new Vector3(0f, 0f, 180f), 0.3f));
 			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
 		}
@@ -68,6 +80,7 @@ namespace Game
 
 			yield return new WaitWhile(() => m_isCardChoosed == false);
 			m_isCardChoosed = false;
+			string request = "";
 			string name = "";
 
 			if (m_choosedObjectName.Length == 0)
@@ -98,6 +111,7 @@ namespace Game
 
 						//yield return new WaitWhile(() => cardColor.IsColorChanged == false);
 						m_colorPanel.transform.position = oldPos;
+						request = "#Card Color_Change_Plus_4 " + m_Card.GetComponent<Card>().color;
 						break;
 					}
 				case "Color_Change":
@@ -115,6 +129,7 @@ namespace Game
 
 						//yield return new WaitWhile(() => cardColor.IsColorChanged == false);
 						m_colorPanel.transform.position = oldPos;
+						request = "#Card Color_Change " + m_Card.GetComponent<Card>().color;
 						break;
 					}
 				case "Deck":
@@ -122,6 +137,7 @@ namespace Game
 						m_Card = null;
 						GameObject card = gameController.GetCard();
 						yield return StartCoroutine(AddCard(card));
+						request = "#Deck";
 						break;
 					}
 				default:
@@ -134,6 +150,11 @@ namespace Game
 
 				GameController controller = m_GameProcess.GetComponent<GameController>();
 				yield return StartCoroutine(controller.MoveCardOnField(m_Card, "Player"));
+
+				if (request == "")
+				{
+					request = "#Card " + name;
+				}
 			}
 
 			// UNO Button
@@ -173,7 +194,21 @@ namespace Game
 			if (m_Card != null)
 			{
 				yield return StartCoroutine(CardsPositioning());
-			}		
+			}
+
+			// Send request with Turn results.
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.LOCAL_NETWORK)
+			{
+				if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.CLIENT)
+				{
+					m_Client.send(request + " " + m_Client.Number);
+				}
+				else if (PlayerPrefs.GetString("PlayerRole") == MainMenu.Constants.SERVER)
+				{
+					m_serverFunctions.SendToAll(request + " " + 0);
+				}
+			}
+
 			m_Card = null;
 			m_choosedObjectName = "";
 			IsYourTurn = false;
@@ -226,7 +261,7 @@ namespace Game
 			}
 		}
 
-		private IEnumerator CardsPositioning()
+		public IEnumerator CardsPositioning()
 		{
 			int count = mPlayer.cardsInHand.Count;
 
