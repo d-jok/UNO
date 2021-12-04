@@ -149,6 +149,7 @@ namespace NetworkClient
 				m_gameController.PrevPlayerNumber();
 			}
 
+			m_gameController.ArrowTurn();
 			Action = "";
 		}
 

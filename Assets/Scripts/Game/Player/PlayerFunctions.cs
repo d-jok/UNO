@@ -96,8 +96,6 @@ namespace Game
 			{
 				case "Color_Change_Plus_4":
 					{
-						Debug.Log("Plus4");
-						//GameObject ColorPanel;
 						Vector3 oldPos = m_colorPanel.transform.position;
 						m_colorPanel.transform.position = new Vector3(0f, 0f, -6f);
 
@@ -105,29 +103,16 @@ namespace Game
 						Debug.Log(colorPanel.name);
 						yield return StartCoroutine(colorPanel.SetColor(m_Card));
 						Choose_Color cardColor = m_Card.GetComponent<Choose_Color>();
-						//cardColor.ChangeColor(color);
-
-						//cardColor.IsColorChanged = false;
-
-						//yield return new WaitWhile(() => cardColor.IsColorChanged == false);
 						m_colorPanel.transform.position = oldPos;
 						request = "#Card Color_Change_Plus_4 " + m_Card.GetComponent<Card>().color;
 						break;
 					}
 				case "Color_Change":
 					{
-						Debug.Log("Change");
-
 						Vector3 oldPos = m_colorPanel.transform.position;
 						m_colorPanel.transform.position = new Vector3(0f, 0f, -6f);
-
-						//Color color = m_colorPanel.GetComponent<Color_Panel>().GetColor();
 						yield return StartCoroutine(m_colorPanel.GetComponent<Color_Panel>().SetColor(m_Card));
 						Choose_Color cardColor = m_Card.GetComponent<Choose_Color>();
-						//cardColor.ChangeColor(color);
-						//cardColor.IsColorChanged = false;
-
-						//yield return new WaitWhile(() => cardColor.IsColorChanged == false);
 						m_colorPanel.transform.position = oldPos;
 						request = "#Card Color_Change " + m_Card.GetComponent<Card>().color;
 						break;

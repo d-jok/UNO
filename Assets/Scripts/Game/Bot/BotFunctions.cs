@@ -229,10 +229,63 @@ namespace Game
 				Choose_Color card = temp.GetComponent<Choose_Color>();
 				Bot.cardsInHand.Remove(temp);
 
-				// ADD choose color method!!!
+				// Method does not work!!!
+				int color_red = 0;
+				int color_green = 0;
+				int color_blue = 0;
+				int color_yellow = 0;
+
+				foreach (var item in Bot.cardsInHand)
+				{
+					switch(item.GetComponent<Card>().color)
+					{
+						case (Color.Red):
+							{
+								++color_red;
+								break;
+							}
+						case (Color.Green):
+							{
+								++color_green;
+								break;
+							}
+						case (Color.Blue):
+							{
+								++color_blue;
+								break;
+							}
+						case (Color.Yellow):
+							{
+								++color_yellow;
+								break;
+							}
+						default:
+							break;
+					}
+				}
+
+				List<int> numberList = new List<int>
+					{
+						color_red, color_green, color_blue, color_yellow
+					};
+
+				int finalNumber = 0;
+				int tempNumber = -1;
+				int index = 0;
+
+				foreach (var colorNumber in numberList)
+				{
+					if (tempNumber > colorNumber)
+					{
+						tempNumber = colorNumber;
+						finalNumber = index;
+					}
+
+					++index;
+				}
 
 				// ERROR HERE!!!!!!
-				card.ChangeColor(Color.Red);
+				card.ChangeColor((Color)System.Enum.GetValues(typeof(Color)).GetValue(finalNumber));
 				yield return new WaitWhile(() => card.IsColorChanged == false);
 
 				yield return StartCoroutine(gameController.MoveCardOnField(temp, "Bot"));

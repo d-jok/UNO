@@ -50,6 +50,7 @@ namespace Game
 		private NetworkClient.Client m_Client;
 		private GameObject m_CurrentPlayer;
 		private PlayerFunctions m_CurrentPlayerFunctions;
+		public GameObject Turn_Arrow_Obj;
 
 //-----------------------------------------------------------------------------
 
@@ -253,6 +254,7 @@ namespace Game
 			//GameObject card = GetCard();
 			//StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
 			m_TurnOrderArrows.SetActive(true);
+			ArrowTurn();
 
 			while (true)
 			{
@@ -369,6 +371,8 @@ namespace Game
 					PrevPlayerNumber();
 				}
 
+				ArrowTurn();
+
 				Debug.Log("*****************************"); //Delete
 			}
 		}
@@ -392,6 +396,7 @@ namespace Game
 			yield return StartCoroutine(CardsDistribution());
 			m_Client.send("#DistributionIsDone");
 			m_TurnOrderArrows.SetActive(true);
+			ArrowTurn();
 
 			while (true)
 			{
@@ -409,6 +414,8 @@ namespace Game
 				{
 					PrevPlayerNumber();
 				}
+
+				ArrowTurn();
 			}
 		}
 
@@ -427,11 +434,13 @@ namespace Game
 				if (mPlayerNumber == 0)
 				{
 					PlayerFunctions func = mPlayersList[mPlayerNumber].GetComponent<PlayerFunctions>();
+					ArrowTurn();
 					yield return StartCoroutine(func.YourTurn());
 				}
 				else
 				{
 					BotFunctions func = mPlayersList[mPlayerNumber].GetComponent<BotFunctions>();
+					ArrowTurn();
 					yield return StartCoroutine(func.YourTurn());
 				}
 
@@ -452,13 +461,19 @@ namespace Game
 		{
 			++mPlayerNumber;
 
-			if (mNames.Count - 1 > 0 && mPlayerNumber >= mNames.Count)
+			if (mNames.Count - 1 > 0)
 			{
-				mPlayerNumber = 0;
+				if (mPlayerNumber >= mNames.Count)
+				{
+					mPlayerNumber = 0;
+				}
 			}
-			else if (mPlayerNumber >= players_lan_updated.Count)
-			{
-				mPlayerNumber = 0;
+			else
+			{ 
+				if (mPlayerNumber >= players_lan_updated.Count)
+				{
+					mPlayerNumber = 0;
+				}
 			}
 		}
 
@@ -690,7 +705,7 @@ namespace Game
 			foreach (var card in Cards)
 			{
 				GameObject obj = Instantiate(card, new Vector3(-5f, 3f, z), Quaternion.Euler(new Vector3(-90f, -180f, 0f)));
-				obj.transform.SetParent(mDeck.transform);
+				//obj.transform.SetParent(mDeck.transform);
 				mCardDeck.Add(obj);
 				z += 0.01f;
 			}
@@ -827,6 +842,81 @@ namespace Game
 			yield return null;
 		}
 
+		public void ArrowTurn()
+		{
+			int angle = 90;
+			Vector3 playerPos = new Vector3();
+			GameObject cardOnField = GetUpperCardOnField();
+			Vector3 cardPos = cardOnField.transform.position;
+
+			int playerNumber = 0;
+
+			if (mNames.Count - 1 > 0)
+			{
+				playerNumber = mNames.Count;
+			}
+			else
+			{
+				playerNumber = players_lan_updated.Count;
+			}		
+
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
+			{
+				if (!m_TurnOrder)
+				{
+					angle = -90;
+				}
+				GameObject player = mPlayersList[mPlayerNumber];
+				playerPos = player.transform.position;
+			}
+			else
+			{
+				angle = 360 / playerNumber;
+				if (!m_TurnOrder)
+				{
+					int temp = angle;
+					angle = -temp;
+				}
+				GameObject player = mPlayersList[mPlayerNumber];
+				playerPos = player.transform.position;
+			}
+
+			if (playerPos.x > 0 && playerPos.y < 0)		// DOWN
+			{
+				float x = cardPos.x;
+				float y = cardPos.y - 3;
+				float z = cardPos.z;
+
+				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+			}
+			else if (playerPos.x > 0 && playerPos.y > 0)	// RIGHT
+			{
+				float x = cardPos.x + 3;
+				float y = cardPos.y;
+				float z = cardPos.z;
+
+				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+			}
+			else if (playerPos.x < 0 && playerPos.y > 0)	// UP
+			{
+				float x = cardPos.x;
+				float y = cardPos.y + 3;
+				float z = cardPos.z;
+
+				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+			}
+			else if (playerPos.x < 0 && playerPos.y < 0)    // LEFT
+			{
+				float x = cardPos.x - 3;
+				float y = cardPos.y;
+				float z = cardPos.z;
+
+				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+			}
+
+			//Turn_Arrow_Obj.transform.Rotate(0, 0, angle);
+		}
+
 		private IEnumerator RestoreDeck()
 		{
 			foreach (var card in m_Discard)
@@ -953,6 +1043,7 @@ namespace Game
 						{
 							PrevPlayerNumber();
 						}
+						ArrowTurn();
 						break;
 					}
 				case Constants.PLUS_2_VALUE:
@@ -1074,6 +1165,7 @@ namespace Game
 								}
 								NextPlayerNumber();
 							}
+							ArrowTurn();
 						}
 						else    // LOCAL NETWORK
 						{
@@ -1085,6 +1177,7 @@ namespace Game
 								yield return StartCoroutine(pFunc.AddCard(card));
 							}
 							//NextPlayerNumber();
+							//ArrowTurn();
 						}
 						break;
 					}

@@ -22,12 +22,14 @@ namespace MainMenu
 		private GameObject m_ServerPanel;
 		private GameObject m_ClientPanel;
 		private GameObject m_NetworkController;
+		private GameObject m_BackButton;
 		//private NetworkServer.Server m_Server;
 		//private NetworkClient.Client m_Client;
 		//---------------------------------
 
 		private bool isDone;
 		private AnimationScript anim = new AnimationScript();
+		private List<string> m_MenuItemsStack;
 
 		private void Awake()
 		{
@@ -38,6 +40,7 @@ namespace MainMenu
 			m_ServerPanel = Canvas.transform.Find("NetworkPanel").Find("Server").gameObject;
 			m_ClientPanel = Canvas.transform.Find("NetworkPanel").Find("Client").gameObject;
 			m_NetworkController = GameObject.Find("NetworkController");
+			m_BackButton = Canvas.transform.Find("BackButton").gameObject;
 			//m_Server = m_NetworkController.GetComponent<NetworkServer.Server>();
 			//m_Client = m_NetworkController.GetComponent<NetworkClient.Client>();
 			//GetComponent<CanvasScaler>().referenceResolution = new Vector2(1280, 720);
@@ -286,7 +289,29 @@ namespace MainMenu
 				isDone = true;
 			}
 
+			m_BackButton.SetActive(true);
+
 			yield return null;
+		}
+
+		public void Back()
+		{
+			m_BackButton.SetActive(false);
+			GameObject server = MenuElements.transform.Find(Constants.SERVER).gameObject;
+
+			int childCount = MenuElements.transform.childCount;
+
+			for (int i = 0; i < childCount; ++i)
+			{
+				GameObject child = MenuElements.transform.GetChild(i).gameObject;
+				if (child.name != Constants.SERVER && child.name != "Background")  //EDIT CHANGE!!!!
+				{
+					Destroy(child);
+				}
+			}
+
+			StartCoroutine(AnimationNewGame(server));
+			m_PageTitle.GetComponent<Text>().text = Constants.NEW_GAME;
 		}
 	}
 }
