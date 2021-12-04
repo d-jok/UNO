@@ -179,6 +179,11 @@ namespace NetworkClient
 			}
 		}
 
+		public void Disconnect()
+		{
+			clientSocket.Disconnect(false);
+		}
+
 		private void listener()
 		{
 			while (clientSocket.Connected)

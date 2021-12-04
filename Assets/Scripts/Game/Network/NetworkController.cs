@@ -9,14 +9,19 @@ namespace Network
 {
 	public class NetworkController : MonoBehaviour
 	{
+		//public GameObject Canvas;
 		public GameObject MessagePanel;
 		public GameObject InputField;
 		public GameObject StartServerButton;
 		public GameObject StopServerButton;		
-		//public GameObject ServerIP_Text;
+		public GameObject ServerIP_Text;
+		public GameObject ServerPanel;
+		public GameObject ClientPanel;
 
 		public GameObject ClientInputField;
 		public GameObject PlayerNameInputField;
+
+		public string IP;
 
 		private GameObject m_ServerObj;
 		private NetworkServer.Server m_Server;
@@ -61,6 +66,10 @@ namespace Network
 				text.GetComponent<Text>().text = ex.ToString();
 			}
 
+			System.Threading.Thread.Sleep(1000);
+			IP = m_Server.GetIPAddress().ToString();
+			ServerIP_Text.GetComponent<Text>().text = IP;
+
 			//ServerIP_Text.GetComponent<Text>().text += m_ServerFunctions.GetIPAddress().ToString();
 		}
 
@@ -75,6 +84,26 @@ namespace Network
 		{
 			PlayerPrefs.SetString("PlayerRole", MainMenu.Constants.SERVER);
 			m_Server.StartGame();
+		}
+
+		public void CloseServerPanel()
+		{
+			if (StartServerButton.active != true)
+			{
+				m_Server.StopServer();
+				StartServerButton.SetActive(true);
+				StopServerButton.SetActive(false);
+			}
+			ServerPanel.SetActive(false);
+		}
+
+		public void CloseClientPanel()
+		{
+			if (m_Client.clientSocket.Connected)
+			{
+				m_Client.Disconnect();
+			}
+			ClientPanel.SetActive(false);
 		}
 
 		public void ClientConnecting()

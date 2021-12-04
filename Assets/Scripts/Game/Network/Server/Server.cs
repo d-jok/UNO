@@ -48,6 +48,11 @@ namespace NetworkServer
 			m_SocketThread.Start();
 		}
 
+		public bool IsServerWorking()
+		{
+			return m_Listener.IsBound;
+		}
+
 		public void StopServer()
 		{
 			m_Listener.Close();

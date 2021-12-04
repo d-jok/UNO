@@ -18,6 +18,7 @@ namespace Game
 		public bool IsCardMoveDone;
 		public bool IsPlayerTurn_Lan;
 		public bool IsPlayerTurnDone_Lan;
+		public bool IsGameInProcess;
 		public List<GameObject> Cards;
 		public GameObject Bot;
 		public GameObject Player;
@@ -51,6 +52,7 @@ namespace Game
 		private GameObject m_CurrentPlayer;
 		private PlayerFunctions m_CurrentPlayerFunctions;
 		public GameObject Turn_Arrow_Obj;
+		private int m_PrevAngle = 0;
 
 //-----------------------------------------------------------------------------
 
@@ -77,6 +79,7 @@ namespace Game
 			m_TurnOrder = true;
 			m_is_DeckSync = false;
 			m_is_PlayersSync = false;
+			IsGameInProcess = true;
 			mPos_Z = 0;
 			mAnim = new AnimationScript();
 			m_CardsOnField = new List<GameObject>();
@@ -171,27 +174,42 @@ namespace Game
 
 		void Update()
 		{
-			// Сhecks if the player still has cards.
-			//if (IsGameStarted)
-			//{
-			//	foreach (var player in mPlayersList)	// THERE ERRORS!!!
-			//	{
-			//		if (player.name.Contains("Player"))
-			//		{
-			//			if (player.GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count == 0)
-			//			{
-			//				Debug.Log(player.name + " WIN!!!"); //EDIT!!!
-			//			}
-			//		}
-			//		else
-			//		{
-			//			if (player.GetComponent<BotFunctions>().Bot.cardsInHand.Count == 0)
-			//			{
-			//				Debug.Log(player.name + " WIN!!!"); //EDIT!!!
-			//			}
-			//		}
-			//	}
-			//}
+			if (IsGameStarted)
+			{
+				if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
+				{
+					foreach (var player in mPlayersList)
+					{
+						if (player.name.Contains("Player"))
+						{
+							if (player.GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count == 0)
+							{
+								IsGameInProcess = false;
+								Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+							}
+						}
+						else
+						{
+							if (player.GetComponent<BotFunctions>().Bot.cardsInHand.Count == 0)
+							{
+								IsGameInProcess = false;
+								Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+							}
+						}
+					}
+				}
+				else
+				{
+					foreach (var player in mPlayersList)
+					{
+						if (player.GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count == 0)
+						{
+							IsGameInProcess = false;
+							Debug.Log(player.name + " WIN!!!");	//EDIT!!!
+						}
+					}
+				}
+			}
 		}
 
 		private void SpawnGameObject(string _path, Vector3 _position)
@@ -240,6 +258,8 @@ namespace Game
 			yield return StartCoroutine(CardsDistribution());
 
 			int playersCount = m_serverFunctions.GetClientsCount();
+			IsGameStarted = true;
+
 			while (playersCount > 0)
 			{
 				foreach (var player in NetworkServer.ServerFunctions.Clients)
@@ -256,7 +276,7 @@ namespace Game
 			m_TurnOrderArrows.SetActive(true);
 			ArrowTurn();
 
-			while (true)
+			while (IsGameInProcess)
 			{
 				Debug.Log(mPlayerNumber);
 
@@ -397,8 +417,9 @@ namespace Game
 			m_Client.send("#DistributionIsDone");
 			m_TurnOrderArrows.SetActive(true);
 			ArrowTurn();
+			IsGameStarted = true;
 
-			while (true)
+			while (IsGameInProcess)
 			{
 				Debug.Log(mPlayerNumber);
 				yield return new WaitWhile(() => IsPlayerTurn_Lan == false);
@@ -423,8 +444,9 @@ namespace Game
 		{
 			yield return new WaitWhile(() => IsGameStarted == false);
 			m_TurnOrderArrows.SetActive(true);
+			IsGameInProcess = true;
 
-			while (true)
+			while (IsGameInProcess)
 			{
 				if (mCardDeck.Count == 0)
 				{
@@ -849,6 +871,8 @@ namespace Game
 			GameObject cardOnField = GetUpperCardOnField();
 			Vector3 cardPos = cardOnField.transform.position;
 
+			Turn_Arrow_Obj.transform.Rotate(0, 0, -m_PrevAngle);
+
 			int playerNumber = 0;
 
 			if (mNames.Count - 1 > 0)
@@ -888,6 +912,8 @@ namespace Game
 				float z = cardPos.z;
 
 				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+				angle = 90;
+				Turn_Arrow_Obj.transform.Rotate(0, 0, angle);
 			}
 			else if (playerPos.x > 0 && playerPos.y > 0)	// RIGHT
 			{
@@ -896,6 +922,8 @@ namespace Game
 				float z = cardPos.z;
 
 				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+				angle = 180;
+				Turn_Arrow_Obj.transform.Rotate(0, 0, angle);
 			}
 			else if (playerPos.x < 0 && playerPos.y > 0)	// UP
 			{
@@ -904,6 +932,8 @@ namespace Game
 				float z = cardPos.z;
 
 				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+				angle = 270;
+				Turn_Arrow_Obj.transform.Rotate(0, 0, angle);
 			}
 			else if (playerPos.x < 0 && playerPos.y < 0)    // LEFT
 			{
@@ -912,8 +942,11 @@ namespace Game
 				float z = cardPos.z;
 
 				Turn_Arrow_Obj.transform.position = new Vector3(x, y, z);
+				angle = 360;
+				Turn_Arrow_Obj.transform.Rotate(0, 0, angle);
 			}
 
+			m_PrevAngle = angle;
 			//Turn_Arrow_Obj.transform.Rotate(0, 0, angle);
 		}
 

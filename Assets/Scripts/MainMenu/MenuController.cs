@@ -23,6 +23,7 @@ namespace MainMenu
 		private GameObject m_ClientPanel;
 		private GameObject m_NetworkController;
 		private GameObject m_BackButton;
+		//public GameObject IP;
 		//private NetworkServer.Server m_Server;
 		//private NetworkClient.Client m_Client;
 		//---------------------------------
@@ -41,6 +42,7 @@ namespace MainMenu
 			m_ClientPanel = Canvas.transform.Find("NetworkPanel").Find("Client").gameObject;
 			m_NetworkController = GameObject.Find("NetworkController");
 			m_BackButton = Canvas.transform.Find("BackButton").gameObject;
+			//IP = Canvas.transform.Find("IP").gameObject;
 			//m_Server = m_NetworkController.GetComponent<NetworkServer.Server>();
 			//m_Client = m_NetworkController.GetComponent<NetworkClient.Client>();
 			//GetComponent<CanvasScaler>().referenceResolution = new Vector2(1280, 720);
