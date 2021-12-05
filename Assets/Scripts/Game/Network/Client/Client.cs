@@ -130,7 +130,7 @@ namespace NetworkClient
 					cardColor = "";
 				}
 
-				yield return StartCoroutine(m_gameController.MoveCardOnField(selectedCard, "Player"));
+				yield return StartCoroutine(m_gameController.MoveCardOnField(selectedCard, "Bot"));
 				yield return StartCoroutine(func.CardsPositioning());
 			}
 			else if (Action == "Deck")

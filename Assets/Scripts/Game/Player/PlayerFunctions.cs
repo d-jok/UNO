@@ -24,6 +24,8 @@ namespace Game
 		private GameObject m_Uno_PopUp;
 		private NetworkClient.Client m_Client;
 		private NetworkServer.ServerFunctions m_serverFunctions;
+		private GameController gameController;
+		private int Number;
 
 		private void Awake()
 		{
@@ -37,6 +39,7 @@ namespace Game
 			m_gameType = PlayerPrefs.GetString("GameType");
 			mAnim = new AnimationScript();
 			m_GameProcess = GameObject.Find("GameController");
+			gameController = m_GameProcess.GetComponent<GameController>();
 			m_Card = null;
 			m_colorPanel = GameObject.Find("Color_Choose");
 		}
@@ -55,6 +58,7 @@ namespace Game
 		public void SetClient_Lan(NetworkClient.Client _client)
 		{
 			m_Client = _client;
+			Number = _client.Number;
 		}
 
 		public IEnumerator AddCard(GameObject _card)
@@ -69,14 +73,32 @@ namespace Game
 			Vector3 cardPos = _card.transform.position;
 			cardPos.z -= 0.5f;
 			yield return StartCoroutine(mAnim.Move(_card, cardPos, 1f));
-			yield return StartCoroutine(mAnim.Rotation(_card, new Vector3(0f, 0f, 180f), 0.3f));
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.LOCAL_NETWORK)
+			{
+				if (m_serverFunctions != null)
+				{
+					yield return StartCoroutine(mAnim.Rotation(_card, new Vector3(0f, 0f, 180f), 0.3f));
+				}
+
+				if (m_Client != null)
+				{
+					if (gameController.m_CurrentPlayer.name == m_Client.Name)
+					{
+						yield return StartCoroutine(mAnim.Rotation(_card, new Vector3(0f, 0f, 180f), 0.3f));
+					}
+				}
+			}
+			else
+			{
+				yield return StartCoroutine(mAnim.Rotation(_card, new Vector3(0f, 0f, 180f), 0.3f));
+			}
 			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
 		}
 
 		public IEnumerator YourTurn()
 		{
 			IsYourTurn = true;
-			GameController gameController = m_GameProcess.GetComponent<GameController>();
+			gameController = m_GameProcess.GetComponent<GameController>();
 
 			yield return new WaitWhile(() => m_isCardChoosed == false);
 			m_isCardChoosed = false;
@@ -143,8 +165,8 @@ namespace Game
 			}
 
 			// UNO Button
-			if (mPlayer.cardsInHand.Count == 1)
-			//if (true)
+			//if (mPlayer.cardsInHand.Count == 1)
+			if (true)
 			{
 				Vector3 oldPos = m_UnoButton.transform.position;
 				m_UnoButton.transform.position = new Vector3(6f, -4.5f, 0f);

@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Game
 {
@@ -25,6 +27,8 @@ namespace Game
 		public GameObject m_TurnOrderArrows;
 		public List<PlayerForLan> players_lan;
 		public List<PlayerForLan> players_lan_updated;
+		public GameObject GameOverPanel;
+		public List<GameObject> rating;
 
 		// Private:
 		private int mPlayerNumber;
@@ -49,7 +53,7 @@ namespace Game
 
 		private GameObject m_ClientObj;
 		private NetworkClient.Client m_Client;
-		private GameObject m_CurrentPlayer;
+		public GameObject m_CurrentPlayer;
 		private PlayerFunctions m_CurrentPlayerFunctions;
 		public GameObject Turn_Arrow_Obj;
 		private int m_PrevAngle = 0;
@@ -186,6 +190,9 @@ namespace Game
 							{
 								IsGameInProcess = false;
 								Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+								GameOver();
+								GameOverPanel.SetActive(true);
+								IsGameStarted = false;
 							}
 						}
 						else
@@ -194,6 +201,9 @@ namespace Game
 							{
 								IsGameInProcess = false;
 								Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+								GameOver();
+								GameOverPanel.SetActive(true);
+								IsGameStarted = false;
 							}
 						}
 					}
@@ -205,11 +215,81 @@ namespace Game
 						if (player.GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count == 0)
 						{
 							IsGameInProcess = false;
-							Debug.Log(player.name + " WIN!!!");	//EDIT!!!
+							Debug.Log(player.name + " WIN!!!"); //EDIT!!!
+							GameOver();
+							GameOverPanel.SetActive(true);
+							IsGameStarted = false;
 						}
 					}
 				}
 			}
+		}
+
+		private void GameOver()
+		{
+			//rating[0].GetComponent<Text>().text = "Sinned";
+			if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.AI)
+			{
+				List<string> names = new List<string>();
+				GameObject temp = new GameObject();
+
+				for (int i = 0; i < mPlayersList.Count - 1; ++i)
+				{
+					for (int j = i + 1; j < mPlayersList.Count; ++j)
+					{
+						if (mPlayersList[i].name == "Player-1")
+						{
+							if (mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count >
+								mPlayersList[j].GetComponent<BotFunctions>().Bot.cardsInHand.Count)
+							{
+								temp = mPlayersList[i];
+								mPlayersList[i] = mPlayersList[j];
+								mPlayersList[j] = temp;
+							}
+						}
+						else
+						{
+							if (mPlayersList[i].GetComponent<BotFunctions>().Bot.cardsInHand.Count >
+								mPlayersList[j].GetComponent<BotFunctions>().Bot.cardsInHand.Count)
+							{
+								temp = mPlayersList[i];
+								mPlayersList[i] = mPlayersList[j];
+								mPlayersList[j] = temp;
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				GameObject temp = new GameObject();
+				for (int i = 0; i < mPlayersList.Count - 1; ++i)
+				{
+					for (int j = i + 1; j < mPlayersList.Count; ++j)
+					{
+						if (mPlayersList[i].GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count >
+							mPlayersList[j].GetComponent<PlayerFunctions>().mPlayer.cardsInHand.Count)
+						{
+							temp = mPlayersList[i];
+							mPlayersList[i] = mPlayersList[j];
+							mPlayersList[j] = temp;
+						}
+					}
+				}
+
+				int k = 0;
+
+				foreach (var player in mPlayersList)
+				{
+					rating[k].GetComponent<Text>().text = "#" + k + " " + player.name;
+					++k;
+				}
+			}
+		}
+
+		public void BackToMainMenu()
+		{
+			SceneManager.LoadScene("MainMenu");
 		}
 
 		private void SpawnGameObject(string _path, Vector3 _position)
@@ -340,7 +420,7 @@ namespace Game
 								}
 
 								yield return StartCoroutine(func.CardsPositioning());
-								yield return StartCoroutine(MoveCardOnField(selectedCard, "Player")); // Change on Bot. 
+								yield return StartCoroutine(MoveCardOnField(selectedCard, "Bot")); // Change on Bot. 
 																									// Becase animation must rotate the card.
 
 								//SEND TO ALL EXCEPT the current player.
