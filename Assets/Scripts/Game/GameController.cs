@@ -935,7 +935,8 @@ namespace Game
 				}
 			}
 
-			card = GetCard();
+			card = GetCardWithoutAbility();
+			//card = GetCard();
 			StartCoroutine(mAnim.Rotation(card, new Vector3(0f, 0f, 180f), 0.3f));
 			StartCoroutine(mAnim.Move(card, new Vector3(0, 0, 0), 1f));
 			yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
@@ -950,6 +951,28 @@ namespace Game
 			IsGameStarted = true;
 
 			yield return null;
+		}
+
+		private GameObject GetCardWithoutAbility()
+		{
+			GameObject FindCard = new GameObject();
+			foreach (var card in mCardDeck)
+			{
+				string cardName = card.name.Split('(')[0];
+
+				if (cardName != "Color_Change" && 
+					cardName != "Color_Change_Plus_4" &&
+					!cardName.Contains("Plus_2") &&
+					!cardName.Contains("Block") &&
+					!cardName.Contains("Turn")
+					)
+				{
+					FindCard = card;
+					break;
+				}
+			}
+
+			return FindCard;
 		}
 
 		public void ArrowTurn()
