@@ -165,8 +165,8 @@ namespace Game
 			}
 
 			// UNO Button
-			//if (mPlayer.cardsInHand.Count == 1)
-			if (true)
+			if (mPlayer.cardsInHand.Count == 1)
+			//if (true)
 			{
 				Vector3 oldPos = m_UnoButton.transform.position;
 				m_UnoButton.transform.position = new Vector3(6f, -4.5f, 0f);

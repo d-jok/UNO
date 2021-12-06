@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Net;
 using System;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace NetworkServer
 {
@@ -19,9 +20,19 @@ namespace NetworkServer
 		public ServerClients m_serverClients;
 		public ServerFunctions serverFunctions = new ServerFunctions();
 		public int Number;
+		public List<GameObject> ClientsList = new List<GameObject>();
 		//private Socket m_Handler;
+		private bool m_IsGameStarted = false;
 
-//-----------------------------------------------------------------------------
+		//-----------------------------------------------------------------------------
+
+		private void Update()
+		{
+			if (m_IsGameStarted == false)
+			{
+				UpdateClientList();
+			}
+		}
 
 		public void SetServerName(string _name)
 		{
@@ -48,6 +59,28 @@ namespace NetworkServer
 			m_SocketThread.Start();
 		}
 
+		public void UpdateClientList()
+		{
+			ClearClientList();
+			int k = 1;
+
+			if (ServerFunctions.Clients.Count != 0)
+			{
+				for (int i = 0; i < ServerFunctions.Clients.Count; ++i)
+				{
+					ClientsList[i].GetComponent<Text>().text = "#" + k + " " + ServerFunctions.Clients[i].Name;
+				}
+			}
+		}
+
+		public void ClearClientList()
+		{
+			foreach (var item in ClientsList)
+			{
+				item.GetComponent<Text>().text = "";
+			}
+		}
+
 		public bool IsServerWorking()
 		{
 			return m_Listener.IsBound;
@@ -66,6 +99,7 @@ namespace NetworkServer
 
 		public void StartGame()
 		{
+			m_IsGameStarted = true;
 			DontDestroyOnLoad(this.gameObject);
 			PlayerPrefs.SetString("GameType", MainMenu.Constants.LOCAL_NETWORK);
 			PlayerPrefs.SetString("PlayerRole", MainMenu.Constants.SERVER);

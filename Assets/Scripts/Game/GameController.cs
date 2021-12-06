@@ -259,6 +259,14 @@ namespace Game
 						}
 					}
 				}
+
+				int k = 0;
+
+				foreach (var player in mPlayersList)
+				{
+					rating[k].GetComponent<Text>().text = "#" + k + " " + player.name;
+					++k;
+				}
 			}
 			else
 			{
