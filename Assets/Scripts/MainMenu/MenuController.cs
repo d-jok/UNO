@@ -239,7 +239,7 @@ namespace MainMenu
 
 				GameObject text = new GameObject();
 				text.AddComponent<TextMesh>();
-				text.GetComponent<TextMesh>().text = "Игра началась...";
+				text.GetComponent<TextMesh>().text = "Game started...";
 				text.GetComponent<TextMesh>().characterSize = 0.1f;
 				text.GetComponent<TextMesh>().anchor = TextAnchor.UpperCenter;
 				text.GetComponent<TextMesh>().fontSize = 18;

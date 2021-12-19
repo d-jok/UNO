@@ -184,6 +184,19 @@ namespace Game
 					yield return new WaitForSeconds(1);
 
 					m_Uno_PopUp.transform.position = Old_Position;
+
+					if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.LOCAL_NETWORK)
+					{
+						if (m_Client != null)
+						{
+							m_Client.send("#UNO_True");
+						}
+						else if (m_serverFunctions != null)
+						{
+							m_serverFunctions.SendToAll("#UNO_True 0");
+						}
+						yield return new WaitForSeconds(1);
+					}
 				}
 				else
 				{
@@ -195,6 +208,20 @@ namespace Game
 						GameObject card = gameController.GetCard();
 						yield return StartCoroutine(AddCard(card));
 					}
+
+					if (PlayerPrefs.GetString("GameType") == MainMenu.Constants.LOCAL_NETWORK)
+					{
+						if (m_Client != null)
+						{
+							m_Client.send("#UNO_False");
+						}
+						else if (m_serverFunctions != null)
+						{
+							m_serverFunctions.SendToAll("#UNO_False 0");
+						}
+					}
+
+					yield return new WaitForSeconds(1);
 				}
 			}
 

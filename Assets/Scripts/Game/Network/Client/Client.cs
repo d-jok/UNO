@@ -36,6 +36,8 @@ namespace NetworkClient
 		private Game.GameController m_gameController;
 		private List<string> listInfo = new List<string>();
 
+		private GameObject m_Uno_PopUp;
+
 		//-----------------------------------------------------------------------------
 
 		private void Start()
@@ -90,6 +92,8 @@ namespace NetworkClient
 
 		private IEnumerator GameUpdate()
 		{
+			m_Uno_PopUp = GameObject.Find("Uno_PopUp(Clone)");
+			bool IsNext = true;
 			List<GameObject> playersList = m_gameController.getPlayersList();
 			GameObject player = new GameObject();
 
@@ -139,12 +143,32 @@ namespace NetworkClient
 				GameObject card = m_gameController.GetCard();
 				yield return StartCoroutine(func.AddCard(card));
 			}
+			else if (Action == "UNO_False")
+			{
+				IsNext = false;
 
-			if (m_gameController.getTurnOrder() == true)
+				for (int i = 0; i < 3; ++i)
+				{
+					GameObject card = m_gameController.GetCard();
+					yield return StartCoroutine(func.AddCard(card));
+				}
+			}
+			else if (Action == "UNO_True")
+			{
+				IsNext = false;
+
+				Vector3 Old_Position = m_Uno_PopUp.transform.position;
+				m_Uno_PopUp.transform.position = new Vector3(0f, 0f, -0.5f);
+				yield return new WaitForSeconds(1);
+
+				m_Uno_PopUp.transform.position = Old_Position;
+			}
+
+			if (m_gameController.getTurnOrder() == true && IsNext)
 			{
 				m_gameController.NextPlayerNumber();
 			}
-			else
+			else if (IsNext)
 			{
 				m_gameController.PrevPlayerNumber();
 			}
@@ -262,7 +286,7 @@ namespace NetworkClient
 						temp = "";
 					}
 				}
-				
+
 				//listInfo = info.Split(' ').ToList();
 				m_is_playersInfo = true;
 			}
@@ -305,6 +329,18 @@ namespace NetworkClient
 			else if (hashtag == "#Deck")
 			{
 				Action = "Deck";
+				playerPlayed = Int32.Parse(_data.Split(' ')[1]);
+				m_is_Update = true;
+			}
+			else if (hashtag == "#UNO_True")
+			{
+				Action = "UNO_True";
+				playerPlayed = Int32.Parse(_data.Split(' ')[1]);
+				m_is_Update = true;
+			}
+			else if (hashtag == "#UNO_False")
+			{
+				Action = "UNO_False";
 				playerPlayed = Int32.Parse(_data.Split(' ')[1]);
 				m_is_Update = true;
 			}

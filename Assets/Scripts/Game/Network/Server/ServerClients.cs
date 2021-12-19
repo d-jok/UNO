@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using UnityEngine;
 
 namespace NetworkServer
 {
@@ -22,6 +21,9 @@ namespace NetworkServer
 		public string Action = "";
 		public string cardName = "";
 		public string cardColor = "";
+
+		public bool IsUno = false;
+		public bool IsUnoPressed = false;
 
 		// Private:
 		private Socket _handler;
@@ -116,6 +118,36 @@ namespace NetworkServer
 			else if (hashtag == "#Deck")
 			{
 				Action = "Deck";
+			}
+			else if (hashtag == "#UNO_True")
+			{
+				string command = "#UNO_True " + client.Number;
+
+				IsUno = true;
+				IsUnoPressed = true;
+
+				foreach (var player in ServerFunctions.Clients)
+				{
+					if (client.Number != player.Number)
+					{
+						player.Send(command);
+					}
+				}
+			}
+			else if (hashtag == "#UNO_False")
+			{
+				string command = "#UNO_False " + client.Number;
+
+				IsUno = true;
+				IsUnoPressed = false;
+
+				foreach (var player in ServerFunctions.Clients)
+				{
+					if (client.Number != player.Number)
+					{
+						player.Send(command);
+					}
+				}
 			}
 		}
 

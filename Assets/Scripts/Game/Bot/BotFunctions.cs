@@ -102,6 +102,11 @@ namespace Game
 		public IEnumerator AddCard(GameObject card)
 		{
 			Bot.cardsInHand.Add(card);
+
+			Vector3 cardPos = card.transform.position;
+			cardPos.z -= 0.5f;
+			yield return StartCoroutine(mAnim.Move(card, cardPos, 1f));
+
 			yield return StartCoroutine(CardsPositioning());
 
 			//IsPositioningDone = false;

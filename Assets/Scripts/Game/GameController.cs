@@ -58,6 +58,8 @@ namespace Game
 		public GameObject Turn_Arrow_Obj;
 		private int m_PrevAngle = 0;
 
+		private GameObject m_Uno_PopUp;
+
 //-----------------------------------------------------------------------------
 
 		public List<GameObject> getPlayersList()
@@ -393,6 +395,32 @@ namespace Game
 					CurrentPlayer.isTurnDone = false;
 
 					Debug.Log(CurrentPlayer.Action); // DELETE.
+
+					if (CurrentPlayer.IsUno)
+					{
+						GameObject player = mPlayersList[mPlayerNumber];
+						PlayerFunctions func = player.GetComponent<PlayerFunctions>();
+						m_Uno_PopUp = GameObject.Find("Uno_PopUp(Clone)");
+
+						if (!CurrentPlayer.IsUnoPressed)
+						{
+							for (int i = 0; i < 3; ++i)
+							{
+								GameObject card = GetCard();
+								yield return StartCoroutine(func.AddCard(card));
+							}
+						}
+						else
+						{
+							Vector3 Old_Position = m_Uno_PopUp.transform.position;
+							m_Uno_PopUp.transform.position = new Vector3(0f, 0f, -0.5f);
+							yield return new WaitForSeconds(1);
+							m_Uno_PopUp.transform.position = Old_Position;
+						}
+
+						CurrentPlayer.IsUno = false;
+						CurrentPlayer.IsUnoPressed = false;
+					}
 
 					switch (CurrentPlayer.Action)
 					{
@@ -956,6 +984,7 @@ namespace Game
 		private GameObject GetCardWithoutAbility()
 		{
 			GameObject FindCard = new GameObject();
+			int i = 0;
 			foreach (var card in mCardDeck)
 			{
 				string cardName = card.name.Split('(')[0];
@@ -968,8 +997,11 @@ namespace Game
 					)
 				{
 					FindCard = card;
+					mCardDeck.RemoveAt(i);
 					break;
 				}
+
+				++i;
 			}
 
 			return FindCard;
@@ -1217,7 +1249,7 @@ namespace Game
 								for (int i = 0; i < 2; ++i)
 								{
 									GameObject card = GetCard();
-									yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
+									//yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
 									yield return StartCoroutine(bFunc.AddCard(card));
 								}
 							}
@@ -1294,7 +1326,7 @@ namespace Game
 								for (int i = 0; i < 4; ++i)
 								{
 									GameObject card = GetCard();
-									yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
+									//yield return StartCoroutine(AnimationGetCard(card, bFunc.Bot.spawnPoint));
 									yield return StartCoroutine(bFunc.AddCard(card));
 								}
 								NextPlayerNumber();
