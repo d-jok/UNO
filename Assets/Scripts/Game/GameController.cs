@@ -1012,7 +1012,8 @@ namespace Game
 			int angle = 90;
 			Vector3 playerPos = new Vector3();
 			GameObject cardOnField = GetUpperCardOnField();
-			Vector3 cardPos = cardOnField.transform.position;
+			//Vector3 cardPos = cardOnField.transform.position;
+			Vector3 cardPos = new Vector3(0, 0, -0.5f);
 
 			Turn_Arrow_Obj.transform.Rotate(0, 0, -m_PrevAngle);
 

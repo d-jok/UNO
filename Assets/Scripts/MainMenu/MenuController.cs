@@ -13,6 +13,7 @@ namespace MainMenu
 	{
 		public GameObject Canvas;
 		public GameObject MenuElements;
+		public bool CanChoose;
 
 		// UI Elements
 		private GameObject mImage;
@@ -34,6 +35,7 @@ namespace MainMenu
 
 		private void Awake()
 		{
+			CanChoose = true;
 			mImage = Canvas.transform.Find("Background").gameObject;
 			mLogo = Canvas.transform.Find("Logo").gameObject;
 			m_PageTitle = Canvas.transform.Find("PageTitle").gameObject;
@@ -67,7 +69,7 @@ namespace MainMenu
 
 		private void Update()
 		{
-			if (Input.GetMouseButtonUp(0))
+			if (Input.GetMouseButtonUp(0) && CanChoose)
 			{
 				RaycastHit hit;
 
@@ -139,12 +141,14 @@ namespace MainMenu
 							}
 						case Constants.SERVER:
 							{
+								CanChoose = false;
 								m_PageTitle.GetComponent<Text>().text = Constants.LOCAL_NETWORK_SERVER;
 								m_ServerPanel.SetActive(true);
 								break;
 							}
 						case Constants.CLIENT:
 							{
+								CanChoose = false;
 								m_PageTitle.GetComponent<Text>().text = Constants.LOCAL_NETWORK_CLIENT;
 								m_ClientPanel.SetActive(true);
 								break;

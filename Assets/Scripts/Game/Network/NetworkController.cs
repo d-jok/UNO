@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MainMenu;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
@@ -21,6 +22,9 @@ namespace Network
 		public GameObject ClientInputField;
 		public GameObject PlayerNameInputField;
 
+		public GameObject MenuController_Obj;
+		private MenuController m_MenuController;
+
 		public string IP;
 
 		private GameObject m_ServerObj;
@@ -37,6 +41,8 @@ namespace Network
 
 			m_ClientObj = GameObject.Find("Client") as GameObject;
 			m_Client = m_ClientObj.GetComponent<NetworkClient.Client>();
+
+			m_MenuController = MenuController_Obj.GetComponent<MenuController>();
 		}
 
 		public void StartSever()
@@ -95,6 +101,7 @@ namespace Network
 				StopServerButton.SetActive(false);
 			}
 			ServerPanel.SetActive(false);
+			m_MenuController.CanChoose = true;
 		}
 
 		public void CloseClientPanel()
@@ -104,6 +111,7 @@ namespace Network
 				m_Client.Disconnect();
 			}
 			ClientPanel.SetActive(false);
+			m_MenuController.CanChoose = true;
 		}
 
 		public void ClientConnecting()
