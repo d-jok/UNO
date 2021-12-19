@@ -99,7 +99,7 @@ namespace Network
 
 		public void CloseClientPanel()
 		{
-			if (m_Client.clientSocket.Connected)
+			if (m_Client.clientSocket != null)
 			{
 				m_Client.Disconnect();
 			}

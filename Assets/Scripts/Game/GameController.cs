@@ -927,9 +927,9 @@ namespace Game
 						else
 						{
 							BotFunctions botFunc = mPlayersList[j].GetComponent<BotFunctions>();
-							Vector3 spawnPoint = botFunc.Bot.spawnPoint;
-							StartCoroutine(mAnim.Move(card, spawnPoint, 1f));
-							yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
+							//Vector3 spawnPoint = botFunc.Bot.spawnPoint;
+							//StartCoroutine(mAnim.Move(card, spawnPoint, 1f));
+							//yield return new WaitWhile(() => mAnim.mIsMoveDone == false);
 							yield return StartCoroutine(botFunc.AddCard(card));
 						}
 					}
